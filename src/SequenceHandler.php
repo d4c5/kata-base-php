@@ -4,24 +4,24 @@ namespace Kata;
 
 class SequenceHandler
 {
-	public function getMinimumValue($sequence)
+	public function getMinimumValue(array $sequence)
 	{
-		return -2;
+		return min($sequence);
 	}
 
-	public function getMaximumValue($sequence)
+	public function getMaximumValue(array $sequence)
 	{
-		return 92;
+		return max($sequence);
 	}
 
-	public function getNumberOfElements($sequence)
+	public function getNumberOfElements(array $sequence)
 	{
-		return 6;
+		return count($sequence);
 	}
 
-	public function getAverage($sequence)
+	public function getAverage(array $sequence)
 	{
-		return 21.8333;
+		return array_sum($sequence) / count($sequence);
 	}
 
 }

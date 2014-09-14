@@ -54,7 +54,7 @@ class SequenceHandlerTest extends \PHPUnit_Framework_TestCase
 	public function providerSequence()
 	{
 		return array(
-			array(array(-2, 92, 6, 21.8333), array(6, 9, 15, -2, 92, 11)),
+			array(array(-2, 92, 6, 21.833333333333), array(6, 9, 15, -2, 92, 11)),
 		);
 	}
 

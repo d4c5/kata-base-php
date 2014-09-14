@@ -55,6 +55,10 @@ class SequenceHandlerTest extends \PHPUnit_Framework_TestCase
 	{
 		return array(
 			array(array(-2, 92, 6, 21.833333333333), array(6, 9, 15, -2, 92, 11)),
+			array(array(-1, 1, 6, 0),                array(1, 1, 1, -1, -1, -1)),
+			array(array(-30, 30, 6, 0),              array(10, -10, 20, -20, 30, -30)),
+			array(array(null, null, 0, null),        array()),
+			array(array(1, 1, 1, 1),                 array(1)),
 		);
 	}
 

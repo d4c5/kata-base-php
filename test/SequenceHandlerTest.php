@@ -44,7 +44,7 @@ class SequenceHandlerTest extends \PHPUnit_Framework_TestCase
 	/**
 	 * @dataProvider providerSequence
 	 */
-	public function testAverageValue($result, $sequence)
+	public function testAverage($result, $sequence)
 	{
 		$sequenceHandler = new SequenceHandler();
 

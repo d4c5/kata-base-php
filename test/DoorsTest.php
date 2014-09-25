@@ -21,7 +21,7 @@ class DoorsTest extends \PHPUnit_Framework_TestCase
 	public function providerDoors()
 	{
 		return array(
-			array(array(true), 1, 1),
+			array(array(1 => true), 1, 1),
 		);
 	}
 

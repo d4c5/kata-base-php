@@ -30,11 +30,11 @@ class Doors
 	{
 		if ($this->numberOfSteps < 0 || $this->numberOfSteps > PHP_INT_MAX)
 		{
-			throw new LimitExceededException(__METHOD__ . " - ");
+			throw new LimitExceededException(__METHOD__ . " - A lepesek szamanak 1 es " . PHP_INT_MAX . " koze kell esnie!");
 		}
 		if ($this->numberOfDoors < 0 || $this->numberOfDoors > PHP_INT_MAX)
 		{
-			throw new LimitExceededException(__METHOD__ . " - ");
+			throw new LimitExceededException(__METHOD__ . " - Az ajtok szama 1 es " . PHP_INT_MAX . " koze kell esnie!");
 		}
 	}
 
@@ -51,36 +51,44 @@ class Doors
 		// true - mert az elso autonyitast el is vegeztuk
 		if ($this->numberOfDoors > 1)
 		{
-			$this->doors = array(2, $this->numberOfDoors, true);
+			$this->doors = array_fill(2, $this->numberOfDoors - 1, true);
 		}
 	}
 
 	private function setStatesOfDoors()
 	{
-		foreach ($this->doors as $doorNumber)
+		foreach (array_keys($this->doors) as $doorNumber)
 		{
 			// Az osztok szamanak lekerdezese
 			$numberOfDivisors = $this->getNumberOfDivisors($doorNumber);
 			// Ha az osztok szama paros, akkor false a vegeredmeny, ha paratlan, akkor true
 			// hiszen ahany osztoja van, annyiszor kellett valtoztatni az allapotot
-			$this->doors[$doorNumber] = !(bool)$numberOfDivisors % 2;
+			$this->doors[$doorNumber] = ($numberOfDivisors % 2 == 1);
 		}
 
 		// A kihagyott 1-es beallitasa
 		$this->doors[1] = true;
+
+		ksort($this->doors);
 	}
 
 	public function getNumberOfDivisors($number)
 	{
-        $primes = $this->prime->getPrimeDecomposition($number);
-        $n = 0;
-        $c = array_count_values($primes);
-        foreach ($c as $exp => $cnt)
+        $primes           = $this->prime->getPrimeDecomposition($number);
+        $numberOfDivisors = 1;
+        $canonicalFormat  = array_count_values($primes);
+		// (k + 1) * (l + 1) * (n + 1) ... = numberOfDivisors
+        foreach ($canonicalFormat as $exp)
         {
-                $n *= ($cnt + 1);
+                $numberOfDivisors *= ($exp + 1);
         }
 
-        return $n;
+        return $numberOfDivisors;
 	}
+
+}
+
+class LimitExceededException extends \Exception
+{
 
 }

@@ -15,6 +15,24 @@ class DoorsTest extends \PHPUnit_Framework_TestCase
 	protected $prime = null;
 
 	/**
+	 * Creates a map of arguments to return values.
+	 *
+	 * @var array
+	 */
+    protected $primeMap = array(
+		array(  1, array(0 => 1)),
+		array(  2, array(0 => 2)),
+		array(  3, array(0 => 3)),
+		array(  4, array(0 => 2, 1 => 2)),
+		array(  5, array(0 => 5)),
+		array(  6, array(0 => 2, 1 => 3)),
+		array(  7, array(0 => 7)),
+		array(  8, array(0 => 2, 1 => 2, 2 => 2)),
+		array(  9, array(0 => 3, 1 => 3)),
+		array( 10, array(0 => 2, 1 => 5)),
+	);
+
+	/**
 	 * Sets the prime object.
 	 */
 	protected function setUp()
@@ -73,7 +91,13 @@ class DoorsTest extends \PHPUnit_Framework_TestCase
 	 */
 	public function testStateOfDoors(array $doorStates, $numberOfDoors, $numberOfSteps)
 	{
-		$doors = new Doors($this->prime, $numberOfDoors, $numberOfSteps);
+		// Creates a stub.
+		$stub = $this->getMock('\Kata\Prime', array('getPrimeDecomposition'));
+		$stub->expects($this->any())
+				->method('getPrimeDecomposition')
+				->will($this->returnValueMap($this->primeMap));
+
+		$doors = new Doors($stub, $numberOfDoors, $numberOfSteps);
 
 		$this->assertEquals($doorStates, $doors->getStatesOfDoors());
 	}

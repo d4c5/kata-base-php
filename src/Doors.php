@@ -4,19 +4,55 @@ namespace Kata;
 
 class Doors
 {
-	private $numberOfSteps = 100;
+	/**
+	 * The number of doors.
+	 *
+	 * @var int
+	 */
 	private $numberOfDoors = 100;
+
+	/**
+	 * The number of steps.
+	 *
+	 * @var int
+	 */
+	private $numberOfSteps = 100;
+
+	/**
+	 * The prime object.
+	 *
+	 * @var Prime
+	 */
 	private $prime         = null;
 
+	/**
+	 * The states of doors.
+	 *
+	 * @var array
+	 */
 	private $doors         = array();
 
+	/**
+	 * Sets the parameters to member parameters.
+	 *
+	 * @param Prime $prime           The prime object.
+	 * @param int   $numberOfDoors   The number of doors.
+	 * @param int   $numberOfSteps   The number of steps.
+	 *
+	 * @return void
+	 */
 	public function __construct(Prime $prime, $numberOfDoors = 100, $numberOfSteps = 100)
 	{
-		$this->numberOfSteps = (int)$numberOfSteps;
-		$this->numberOfDoors = (int)$numberOfDoors;
+		$this->numberOfDoors = $numberOfDoors;
+		$this->numberOfSteps = $numberOfSteps;
 		$this->prime         = $prime;
 	}
 
+	/**
+	 * Returns the states of doors.
+	 *
+	 * @return array
+	 */
 	public function getStatesOfDoors()
 	{
 		$this->checkNumbers();
@@ -26,53 +62,87 @@ class Doors
 		return $this->doors;
 	}
 
+	/**
+	 * Checks the parameters (type and range).
+	 *
+	 * @return void
+	 *
+	 * @throws DoorsException
+	 */
 	private function checkNumbers()
 	{
-		if ($this->numberOfSteps < 0 || $this->numberOfSteps > PHP_INT_MAX)
+		if (!is_int($this->numberOfDoors))
 		{
-			throw new LimitExceededException(__METHOD__ . " - A lepesek szamanak 1 es " . PHP_INT_MAX . " koze kell esnie!");
+			throw new DoorsException(DoorsException::THE_NUMBER_OF_DOORS_IS_INVALID_INT);
 		}
-		if ($this->numberOfDoors < 0 || $this->numberOfDoors > PHP_INT_MAX)
+		if (!is_int($this->numberOfSteps))
 		{
-			throw new LimitExceededException(__METHOD__ . " - Az ajtok szama 1 es " . PHP_INT_MAX . " koze kell esnie!");
+			throw new DoorsException(DoorsException::THE_NUMBER_OF_STEPS_IS_INVALID_INT);
+		}
+		if ($this->numberOfDoors < 1 || $this->numberOfDoors > PHP_INT_MAX)
+		{
+			throw new DoorsException(DoorsException::THE_NUMBER_OF_DOORS_IS_OUT_OF_RANGE);
+		}
+		if ($this->numberOfSteps < 1 || $this->numberOfSteps > PHP_INT_MAX)
+		{
+			throw new DoorsException(DoorsException::THE_NUMBER_OF_STEPS_IS_OUT_OF_RANGE);
 		}
 	}
 
+	/**
+	 * Sets the states of doors and corrects numbers.
+	 *
+	 * @return void
+	 */
 	private function initialize()
 	{
-		// Ha nagyobb a lepesek szama, mint az ajtok szama, akkor a tobblet lepesnek nincs ertelme,
-		// hiszen az ajtok szama feletti lepesszamnal nem fog valtozni az ajtok allapota
+		// If the number of steps is greater than number of doors, then the excess steps are unnecessary,
+		// because the number of steps over the number of doors will not change the states of doors.
 		if ($this->numberOfSteps > $this->numberOfDoors)
 		{
 			$this->numberOfSteps = $this->numberOfDoors;
 		}
 
-		// 2-tol, mert az elso ajto az alapallapotban marad
-		// true - mert az elso autonyitast el is vegeztuk
+		// From 2, because the state of the first door is static.
+		// True, because the first door opening sets this status.
 		if ($this->numberOfDoors > 1)
 		{
 			$this->doors = array_fill(2, $this->numberOfDoors - 1, true);
 		}
 	}
 
+	/**
+	 * Sets the states of doors after steps.
+	 *
+	 * @return void
+	 */
 	private function setStatesOfDoors()
 	{
 		foreach (array_keys($this->doors) as $doorNumber)
 		{
-			// Az osztok szamanak lekerdezese
+			// Gets the number of divisors.
 			$numberOfDivisors = $this->getNumberOfDivisors($doorNumber);
-			// Ha az osztok szama paros, akkor false a vegeredmeny, ha paratlan, akkor true
-			// hiszen ahany osztoja van, annyiszor kellett valtoztatni az allapotot
+			// If the number of divisors is even then the status will be false (closed),
+			// if odd it will be true (opened), because repeatedly to be changed the states
+			// as many as the number of divisors.
 			$this->doors[$doorNumber] = ($numberOfDivisors % 2 == 1);
 		}
 
-		// A kihagyott 1-es beallitasa
+		// Sets the skipped first door.
 		$this->doors[1] = true;
 
+		// Sorts the doors by number.
 		ksort($this->doors);
 	}
 
-	public function getNumberOfDivisors($number)
+	/**
+	 * Returns the number of divisors.
+	 *
+	 * @param int $number   Number.
+	 *
+	 * @return int
+	 */
+	private function getNumberOfDivisors($number)
 	{
         $primes           = $this->prime->getPrimeDecomposition($number);
         $numberOfDivisors = 1;
@@ -85,10 +155,5 @@ class Doors
 
         return $numberOfDivisors;
 	}
-
-}
-
-class LimitExceededException extends \Exception
-{
 
 }

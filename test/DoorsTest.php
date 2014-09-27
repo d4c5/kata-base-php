@@ -80,7 +80,7 @@ class DoorsTest extends \PHPUnit_Framework_TestCase
 
 	/**
 	 * States of doors, number of doors, number of steps.
-	 * 
+	 *
 	 * @return array
 	 */
 	public function providerDoors()
@@ -95,6 +95,8 @@ class DoorsTest extends \PHPUnit_Framework_TestCase
 	}
 
 	/**
+	 * Tests status of one door.
+	 *
 	 * @dataProvider providerOneDoorState
 	 */
 	public function testOneState($doorNumber, $doorState, $numberOfDoors, $numberOfSteps)
@@ -106,6 +108,11 @@ class DoorsTest extends \PHPUnit_Framework_TestCase
 		$this->assertEquals($doorState, $statesOfDoors[$doorNumber]);
 	}
 
+	/**
+	 * The number of door, the status of door, the number of doors and the number of steps.
+	 *
+	 * @return array
+	 */
 	public function providerOneDoorState()
 	{
 		return array(

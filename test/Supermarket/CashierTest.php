@@ -3,17 +3,37 @@
 namespace Kata\Test\Supermarket;
 
 use Kata\Supermarket\Cashier;
-use Kata\Supermarket\ShoppingCart;
 use Kata\Supermarket\Discount;
 use Kata\Supermarket\Product;
 use Kata\Supermarket\ProductToPurchase;
 
 class CashierTest extends \PHPUnit_Framework_TestCase
 {
-	/** Products */
-	const PRODUCT_APPLE    = 0;
-	const PRODUCT_LIGHT    = 1;
-	const PRODUCT_STARSHIP = 2;
+	/** Data of products and discounts. */
+	const PRODUCT_APPLE_ID    = 0;
+	const PRODUCT_APPLE_NAME  = 'Name';
+	const PRODUCT_APPLE_PRICE = 32;
+	const PRODUCT_APPLE_UNIT  = 'kg';
+
+	const DISCOUNT_APPLE_TYPE         = Discount::DISCOUNT_LESSER_PRICE;
+	const DISCOUNT_APPLE_MIN_QUANTITY = 5.0;
+	const DISCOUNT_APPLE_PRICE        = 25;
+
+	const PRODUCT_LIGHT_ID    = 1;
+	const PRODUCT_LIGHT_NAME  = 'Light';
+	const PRODUCT_LIGHT_PRICE = 15;
+	const PRODUCT_LIGHT_UNIT  = 'year';
+
+	const DISCOUNT_LIGHT_TYPE = Discount::DISCOUNT_NONE;
+
+	const PRODUCT_STARSHIP_ID    = 2;
+	const PRODUCT_STARSHIP_NAME  = 'Starship';
+	const PRODUCT_STARSHIP_PRICE = 999.99;
+	const PRODUCT_STARSHIP_UNIT  = 'piece';
+
+	const DISCOUNT_STARSHIP_TYPE          = Discount::DISCOUNT_TWO_PAID_ONE_FREE;
+	const DISCOUNT_STARSHIP_MIN_QUANTITY  = 2;
+	const DISCOUNT_STARSHIP_FREE_QUANTITY = 1;
 
 	/**
 	 * Products.
@@ -21,73 +41,6 @@ class CashierTest extends \PHPUnit_Framework_TestCase
 	 * @var array
 	 */
 	private $products = array();
-
-	/**
-	 * Sets the products and discounts.
-	 */
-	protected function setUp()
-	{
-		$this->setAppleProduct();
-		$this->setLightProduct();
-		$this->setStarshipProduct();
-	}
-
-	/**
-	 * Sets properties of the apple product.
-	 *
-	 * @return void
-	 */
-	private function setAppleProduct()
-	{
-		$appleDiscount = new Discount();
-		$appleDiscount->setType(Discount::DISCOUNT_LESSER_PRICE);
-		$appleDiscount->setMinimumQuantity(5.0);
-		$appleDiscount->setDiscountPricePerUnit(25);
-
-		$apple = new Product();
-		$apple->setName('Apple');
-		$apple->setPricePerUnit(32);
-		$apple->setUnit('kg');
-		$apple->setDiscount($appleDiscount);
-
-		$this->products[self::PRODUCT_APPLE] = $apple;
-	}
-
-	/**
-	 * Sets properties of the light product.
-	 */
-	private function setLightProduct()
-	{
-		$lightDiscount = new Discount();
-		$lightDiscount->setType(Discount::DISCOUNT_NONE);
-
-		$light = new Product();
-		$light->setName('Light');
-		$light->setPricePerUnit(15);
-		$light->setUnit('year');
-		$light->setDiscount($lightDiscount);
-
-		$this->products[self::PRODUCT_LIGHT] = $light;
-	}
-
-	/**
-	 * Sets properties of the starship product.
-	 */
-	private function setStarshipProduct()
-	{
-		$starshipDiscount = new Discount();
-		$starshipDiscount->setType(Discount::DISCOUNT_TWO_PAID_ONE_FREE);
-		$starshipDiscount->setMinimumQuantity(2);
-		$starshipDiscount->setFreeQuantity(1);
-
-		$starship = new Product();
-		$starship->setName('Starship');
-		$starship->setPricePerUnit(999.99);
-		$starship->setUnit('piece');
-		$starship->setDiscount($starshipDiscount);
-
-		$this->products[self::PRODUCT_STARSHIP] = $starship;
-	}
 
 	/**
 	 * Tests the calculation of the cashier.
@@ -99,42 +52,168 @@ class CashierTest extends \PHPUnit_Framework_TestCase
 	 */
 	public function testTotalPrice($totalPrice, $purchases)
 	{
-		$shoppingCart = new ShoppingCart();
+		$stub = $this->getMock('\Kata\Supermarket\ShoppingCart', array('getShoppingCart'));
+		$stub->expects($this->any())
+				->method('getShoppingCart')
+				->will($this->returnValue($purchases));
 
-		foreach ($purchases as $product => $quantity)
-		{
-			$productToPurchase = new ProductToPurchase();
-			$productToPurchase->setProduct($this->products[$product]);
-			$productToPurchase->setQuantity($quantity);
-
-			$shoppingCart->add($productToPurchase);
-		}
-
-		$cashier = new Cashier($shoppingCart);
+		$cashier = new Cashier($stub);
 
 		$this->assertEquals($totalPrice, $cashier->getTotalPrice());
 	}
 
 	/**
+	 * Sets properties of the apple product.
+	 *
+	 * @return void
+	 */
+	private function setAppleProduct()
+	{
+		$appleDiscount = new Discount();
+		$appleDiscount->setType(self::DISCOUNT_APPLE_TYPE);
+		$appleDiscount->setMinimumQuantity(self::DISCOUNT_APPLE_MIN_QUANTITY);
+		$appleDiscount->setDiscountPricePerUnit(self::DISCOUNT_APPLE_PRICE);
+
+		$apple = new Product();
+		$apple->setName(self::PRODUCT_APPLE_NAME);
+		$apple->setPricePerUnit(self::PRODUCT_APPLE_PRICE);
+		$apple->setUnit(self::PRODUCT_APPLE_UNIT);
+		$apple->setDiscount($appleDiscount);
+
+		$this->products[self::PRODUCT_APPLE_ID] = $apple;
+	}
+
+	/**
+	 * Sets properties of the light product.
+	 *
+	 * @return void
+	 */
+	private function setLightProduct()
+	{
+		$lightDiscount = new Discount();
+		$lightDiscount->setType(self::DISCOUNT_LIGHT_TYPE);
+
+		$light = new Product();
+		$light->setName(self::PRODUCT_LIGHT_NAME);
+		$light->setPricePerUnit(self::PRODUCT_LIGHT_PRICE);
+		$light->setUnit(self::PRODUCT_LIGHT_UNIT);
+		$light->setDiscount($lightDiscount);
+
+		$this->products[self::PRODUCT_LIGHT_ID] = $light;
+	}
+
+	/**
+	 * Sets properties of the starship product.
+	 *
+	 * @return void
+	 */
+	private function setStarshipProduct()
+	{
+		$starshipDiscount = new Discount();
+		$starshipDiscount->setType(self::DISCOUNT_STARSHIP_TYPE);
+		$starshipDiscount->setMinimumQuantity(self::DISCOUNT_STARSHIP_MIN_QUANTITY);
+		$starshipDiscount->setFreeQuantity(self::DISCOUNT_STARSHIP_FREE_QUANTITY);
+
+		$starship = new Product();
+		$starship->setName(self::PRODUCT_STARSHIP_NAME);
+		$starship->setPricePerUnit(self::PRODUCT_STARSHIP_PRICE);
+		$starship->setUnit(self::PRODUCT_STARSHIP_UNIT);
+		$starship->setDiscount($starshipDiscount);
+
+		$this->products[self::PRODUCT_STARSHIP_ID] = $starship;
+	}
+
+	/**
+	 * Returns normal test purchases.
+	 *
+	 * @return array
+	 */
+	private function getNormalTestData()
+	{
+		$purchases = array();
+
+		$test1 = new ProductToPurchase();
+		$test1->setProduct($this->products[self::PRODUCT_APPLE_ID]);
+		$test1->setQuantity(2.0);
+
+		$purchases[] = array(64, array($test1));
+
+
+		$test21 = new ProductToPurchase();
+		$test21->setProduct($this->products[self::PRODUCT_LIGHT_ID]);
+		$test21->setQuantity(5);
+
+		$test22 = new ProductToPurchase();
+		$test22->setProduct($this->products[self::PRODUCT_APPLE_ID]);
+		$test22->setQuantity(1.0);
+
+		$purchases[] = array(107, array($test21, $test22));
+
+
+		$test3 = new ProductToPurchase();
+		$test3->setProduct($this->products[self::PRODUCT_STARSHIP_ID]);
+		$test3->setQuantity(1);
+
+		$purchases[] = array(999.99, array($test3));
+
+		return $purchases;
+	}
+
+	/**
+	 * Returns discount test purchases.
+	 *
+	 * @return array
+	 */
+	private function getDiscountTestData()
+	{
+		$purchases = array();
+
+		$test4 = new ProductToPurchase();
+		$test4->setProduct($this->products[self::PRODUCT_APPLE_ID]);
+		$test4->setQuantity(7.0);
+
+		$purchases[] = array(175, array($test4));
+
+
+		$test51 = new ProductToPurchase();
+		$test51->setProduct($this->products[self::PRODUCT_LIGHT_ID]);
+		$test51->setQuantity(5);
+
+		$test52 = new ProductToPurchase();
+		$test52->setProduct($this->products[self::PRODUCT_APPLE_ID]);
+		$test52->setQuantity(8.0);
+
+		$purchases[] = array(275, array($test51, $test52));
+
+
+		$test6 = new ProductToPurchase();
+		$test6->setProduct($this->products[self::PRODUCT_STARSHIP_ID]);
+		$test6->setQuantity(6);
+
+		$purchases[] = array(3999.96, array($test6));
+
+		return $purchases;
+	}
+
+	/**
 	 * Test purchases.
 	 *
-	 * Total price, (product => quantity).
+	 * Total price, the content of shopping cart.
 	 *
 	 * @return array
 	 */
 	public function providerPurchase()
 	{
-		return array(
-			array(  64,    array(self::PRODUCT_APPLE    => 2.0)),
-			array( 107,    array(self::PRODUCT_LIGHT    => 5, self::PRODUCT_APPLE => 1.0)),
-			array( 999.99, array(self::PRODUCT_STARSHIP => 1)),
+		$this->setAppleProduct();
+		$this->setLightProduct();
+		$this->setStarshipProduct();
 
-			array( 175,    array(self::PRODUCT_APPLE    => 7.0)),
-			array( 275,    array(self::PRODUCT_LIGHT    => 5, self::PRODUCT_APPLE => 8.0)),
-			array(3999.96, array(self::PRODUCT_STARSHIP => 6)),
-			array(4199.96, array(self::PRODUCT_STARSHIP => 6, self::PRODUCT_APPLE => 8.0)),
+		$normalPurchases   = $this->getNormalTestData();
+		$discountPurchases = $this->getDiscountTestData();
 
-			array(   0.0,  array(self::PRODUCT_APPLE    => 0.0)),
+		return array_merge(
+			$normalPurchases,
+			$discountPurchases
 		);
 	}
 

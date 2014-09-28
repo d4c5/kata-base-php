@@ -35,7 +35,7 @@ class ShoppingCart
 	 */
 	public function add(ProductToPurchase $productToPurchase)
 	{
-		return;
+		$this->shoppingCart[] = $productToPurchase;
 	}
 
 	/**
@@ -47,7 +47,7 @@ class ShoppingCart
 	 */
 	public function remove($numberOfPurchase)
 	{
-		return;
+		unset($this->shoppingCart[$numberOfPurchase]);
 	}
 
 }

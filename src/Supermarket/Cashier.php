@@ -18,7 +18,18 @@ class Cashier
 
 	public function getTotalPrice()
 	{
+		$totalPrice = 0.0;
 
+		// Total price without discounts.
+		foreach ($this->shoppingCart->getShoppingCart() as $productToPurchase)
+		{
+			$product    = $productToPurchase->getProduct();
+			// $discount   = $product->getDiscount();
+
+			$totalPrice += $productToPurchase->getQuantity() * $product->getPricePerUnit();
+		}
+
+		return $totalPrice;
 	}
 
 }

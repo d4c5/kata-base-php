@@ -58,10 +58,14 @@ class CashierTest extends \PHPUnit_Framework_TestCase
 	 */
 	private function setLightProduct()
 	{
+		$lightDiscount = new Discount();
+		$lightDiscount->setType(Discount::DISCOUNT_NONE);
+
 		$light = new Product();
 		$light->setName('Light');
 		$light->setPricePerUnit(15);
 		$light->setUnit('year');
+		$light->setDiscount($lightDiscount);
 
 		$this->products[self::PRODUCT_LIGHT] = $light;
 	}

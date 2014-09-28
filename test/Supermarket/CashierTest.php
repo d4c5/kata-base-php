@@ -125,9 +125,15 @@ class CashierTest extends \PHPUnit_Framework_TestCase
 	public function providerPurchase()
 	{
 		return array(
-			array( 64,    array(self::PRODUCT_APPLE    => 2.0)),
-			array(107,    array(self::PRODUCT_LIGHT    => 5, self::PRODUCT_APPLE => 1.0)),
-			array(999.99, array(self::PRODUCT_STARSHIP => 1)),
+			array(  64,    array(self::PRODUCT_APPLE    => 2.0)),
+			array( 107,    array(self::PRODUCT_LIGHT    => 5, self::PRODUCT_APPLE => 1.0)),
+			array( 999.99, array(self::PRODUCT_STARSHIP => 1)),
+
+			array( 175,    array(self::PRODUCT_APPLE    => 7.0)),
+			array( 275,    array(self::PRODUCT_LIGHT    => 5, self::PRODUCT_APPLE => 8.0)),
+			array(3999.96, array(self::PRODUCT_STARSHIP => 6)),
+
+			array(   0.0,  array(self::PRODUCT_APPLE    => 0.0)),
 		);
 	}
 

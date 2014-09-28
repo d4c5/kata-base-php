@@ -44,12 +44,16 @@ class Cashier
 			$product  = $productToPurchase->getProduct();
 			$discount = $product->getDiscount();
 
-			if ($discount->getType() == Discount::DISCOUNT_LESSER_PRICE)
-			{
+			if (
+				$discount->getType() == Discount::DISCOUNT_LESSER_PRICE
+				&& $productToPurchase->getQuantity() > $discount->getMinimumQuantity()
+			) {
 				$totalPrice += $this->getDiscountLesserPrice($productToPurchase);
 			}
-			elseif ($discount->getType() == Discount::DISCOUNT_TWO_PAID_ONE_FREE)
-			{
+			elseif (
+				$discount->getType() == Discount::DISCOUNT_TWO_PAID_ONE_FREE
+				&& $productToPurchase->getQuantity() > $discount->getMinimumQuantity()
+			) {
 				$totalPrice += $this->getDiscountTwoPaidOneFreePrice($productToPurchase);
 			}
 			else
@@ -70,20 +74,10 @@ class Cashier
 	 */
 	private function getDiscountLesserPrice(ProductToPurchase $productToPurchase)
 	{
-		$price    = 0.0;
 		$product  = $productToPurchase->getProduct();
 		$discount = $product->getDiscount();
 
-		if ($productToPurchase->getQuantity() > $discount->getMinimumQuantity())
-		{
-			$price = $productToPurchase->getQuantity() * $discount->getDiscountPricePerUnit();
-		}
-		else
-		{
-			$price = $this->getNormalPrice($productToPurchase);
-		}
-
-		return $price;
+		return $productToPurchase->getQuantity() * $discount->getDiscountPricePerUnit();
 	}
 
 	/**
@@ -95,29 +89,19 @@ class Cashier
 	 */
 	private function getDiscountTwoPaidOneFreePrice(ProductToPurchase $productToPurchase)
 	{
-		$price    = 0.0;
 		$product  = $productToPurchase->getProduct();
 		$discount = $product->getDiscount();
 
-		if ($productToPurchase->getQuantity() > $discount->getMinimumQuantity())
-		{
-			// D + F
-			$discountGroupCount = $discount->getMinimumQuantity() + $discount->getFreeQuantity();
-			// intval(Q / (D + F)) * (D + F) = I
-			$discountQuantity   = intval($productToPurchase->getQuantity() / $discountGroupCount) * $discountGroupCount;
-			// D / (D + F) * P = R
-			$discountPrice      = $discount->getMinimumQuantity() / $discountGroupCount * $product->getPricePerUnit();
-			// Q - I
-			$quantity           = $productToPurchase->getQuantity() - $discountQuantity;
+		// D + F
+		$discountGroupCount = $discount->getMinimumQuantity() + $discount->getFreeQuantity();
+		// intval(Q / (D + F)) * (D + F) = I
+		$discountQuantity   = intval($productToPurchase->getQuantity() / $discountGroupCount) * $discountGroupCount;
+		// D / (D + F) * P = R
+		$discountPrice      = $discount->getMinimumQuantity() / $discountGroupCount * $product->getPricePerUnit();
+		// Q - I
+		$quantity           = $productToPurchase->getQuantity() - $discountQuantity;
 
-			$price = $quantity * $product->getPricePerUnit() + $discountQuantity * $discountPrice;
-		}
-		else
-		{
-			$price = $this->getNormalPrice($productToPurchase);
-		}
-
-		return $price;
+		return $quantity * $product->getPricePerUnit() + $discountQuantity * $discountPrice;
 	}
 
 	/**

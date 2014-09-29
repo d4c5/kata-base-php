@@ -3,7 +3,9 @@
 namespace Kata\Test\Supermarket;
 
 use Kata\Supermarket\Cashier;
-use Kata\Supermarket\Discount;
+use Kata\Supermarket\Discount\NoneDiscount;
+use Kata\Supermarket\Discount\LesserPriceDiscount;
+use Kata\Supermarket\Discount\TwoPaidOneFreeDiscount;
 use Kata\Supermarket\Product;
 use Kata\Supermarket\ProductToPurchase;
 
@@ -15,7 +17,6 @@ class CashierTest extends \PHPUnit_Framework_TestCase
 	const PRODUCT_APPLE_PRICE = 32;
 	const PRODUCT_APPLE_UNIT  = 'kg';
 
-	const DISCOUNT_APPLE_TYPE         = Discount::DISCOUNT_LESSER_PRICE;
 	const DISCOUNT_APPLE_MIN_QUANTITY = 5.0;
 	const DISCOUNT_APPLE_PRICE        = 25;
 
@@ -24,14 +25,11 @@ class CashierTest extends \PHPUnit_Framework_TestCase
 	const PRODUCT_LIGHT_PRICE = 15;
 	const PRODUCT_LIGHT_UNIT  = 'year';
 
-	const DISCOUNT_LIGHT_TYPE = Discount::DISCOUNT_NONE;
-
 	const PRODUCT_STARSHIP_ID    = 2;
 	const PRODUCT_STARSHIP_NAME  = 'Starship';
 	const PRODUCT_STARSHIP_PRICE = 999.99;
 	const PRODUCT_STARSHIP_UNIT  = 'piece';
 
-	const DISCOUNT_STARSHIP_TYPE          = Discount::DISCOUNT_TWO_PAID_ONE_FREE;
 	const DISCOUNT_STARSHIP_MIN_QUANTITY  = 2;
 	const DISCOUNT_STARSHIP_FREE_QUANTITY = 1;
 
@@ -69,8 +67,7 @@ class CashierTest extends \PHPUnit_Framework_TestCase
 	 */
 	private function setAppleProduct()
 	{
-		$appleDiscount = new Discount();
-		$appleDiscount->setType(self::DISCOUNT_APPLE_TYPE);
+		$appleDiscount = new LesserPriceDiscount();
 		$appleDiscount->setMinimumQuantity(self::DISCOUNT_APPLE_MIN_QUANTITY);
 		$appleDiscount->setDiscountPricePerUnit(self::DISCOUNT_APPLE_PRICE);
 
@@ -90,8 +87,7 @@ class CashierTest extends \PHPUnit_Framework_TestCase
 	 */
 	private function setLightProduct()
 	{
-		$lightDiscount = new Discount();
-		$lightDiscount->setType(self::DISCOUNT_LIGHT_TYPE);
+		$lightDiscount = new NoneDiscount();
 
 		$light = new Product();
 		$light->setName(self::PRODUCT_LIGHT_NAME);
@@ -109,8 +105,7 @@ class CashierTest extends \PHPUnit_Framework_TestCase
 	 */
 	private function setStarshipProduct()
 	{
-		$starshipDiscount = new Discount();
-		$starshipDiscount->setType(self::DISCOUNT_STARSHIP_TYPE);
+		$starshipDiscount = new TwoPaidOneFreeDiscount();
 		$starshipDiscount->setMinimumQuantity(self::DISCOUNT_STARSHIP_MIN_QUANTITY);
 		$starshipDiscount->setFreeQuantity(self::DISCOUNT_STARSHIP_FREE_QUANTITY);
 

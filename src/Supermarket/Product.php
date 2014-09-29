@@ -2,6 +2,8 @@
 
 namespace Kata\Supermarket;
 
+use Kata\Supermarket\Discount\DiscountAbstract;
+
 /**
  * Product.
  */
@@ -31,7 +33,7 @@ class Product
 	/**
 	 * Discount.
 	 *
-	 * @var Discount
+	 * @var NoneDiscount|LesserPriceDiscount|TwoPaidOneFreeDiscount
 	 */
 	private $discount = null;
 
@@ -104,11 +106,11 @@ class Product
 	/**
 	 * Sets discount.
 	 *
-	 * @param Discount $discount
+	 * @param DiscountAbstract $discount
 	 *
 	 * @return void
 	 */
-	public function setDiscount($discount)
+	public function setDiscount(DiscountAbstract $discount)
 	{
 		$this->discount = $discount;
 	}
@@ -116,7 +118,7 @@ class Product
 	/**
 	 * Returns discount.
 	 *
-	 * @return Discount
+	 * @return DiscountAbstract
 	 */
 	public function getDiscount()
 	{

@@ -1,24 +1,14 @@
 <?php
 
-namespace Kata\Supermarket;
+namespace Kata\Supermarket\Discount;
+
+use Kata\Supermarket\ProductToPurchase;
 
 /**
- * Discount.
+ * Lesser price discount.
  */
-class Discount
+class LesserPriceDiscount extends DiscountAbstract
 {
-	/** The type of discounts */
-	const DISCOUNT_NONE              = 0;
-	const DISCOUNT_LESSER_PRICE      = 1;
-	const DISCOUNT_TWO_PAID_ONE_FREE = 2;
-
-	/**
-	 * The type of the discount.
-	 *
-	 * @var int
-	 */
-	private $type = self::DISCOUNT_NONE;
-
 	/**
 	 * The discount price per unit.
 	 *
@@ -34,32 +24,22 @@ class Discount
 	private $minimumQuantity = 0.0;
 
 	/**
-	 * The quantity of the free product(s).
+	 * Returns reduced price by discount.
 	 *
-	 * @var float
+	 * @param ProductToPurchase $productToPurchase
+	 *
+	 * @return float
 	 */
-	private $freeQuantity = 0.0;
-
-	/**
-	 * Sets the type of the discount.
-	 *
-	 * @param int $type
-	 *
-	 * @return void
-	 */
-	public function setType($type)
+	public function getPrice(ProductToPurchase $productToPurchase)
 	{
-		$this->type = $type;
-	}
-
-	/**
-	 * Returns the type of the discount.
-	 *
-	 * @return int
-	 */
-	public function getType()
-	{
-		return $this->type;
+		if ($productToPurchase->getQuantity() > $this->minimumQuantity)
+		{
+			return $productToPurchase->getQuantity() * $this->discountPricePerUnit;
+		}
+		else
+		{
+			return parent::getPrice($productToPurchase);
+		}
 	}
 
 	/**
@@ -104,28 +84,6 @@ class Discount
 	public function getMinimumQuantity()
 	{
 		return $this->minimumQuantity;
-	}
-
-	/**
-	 * Sets the free quantity of discount.
-	 *
-	 * @param float $freeQuantity
-	 *
-	 * @return void
-	 */
-	public function setFreeQuantity($freeQuantity)
-	{
-		$this->freeQuantity = $freeQuantity;
-	}
-
-	/**
-	 * Returns the free quantity of discount.
-	 *
-	 * @return float
-	 */
-	public function getFreeQuantity()
-	{
-		return $this->freeQuantity;
 	}
 
 }

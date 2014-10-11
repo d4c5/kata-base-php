@@ -23,31 +23,86 @@ class ShoppingCart
 	 */
 	public function getShoppingCart()
 	{
-		return $this->shoppingCart;
+		// Reindex keys of array.
+		return array_values($this->shoppingCart);
 	}
 
 	/**
-	 * Adds a product to purchase.
+	 * Returns the number of searched product in cart.
 	 *
 	 * @param ProductToPurchase $productToPurchase
 	 *
-	 * @return void
+	 * @return int|boolean
 	 */
-	public function add(ProductToPurchase $productToPurchase)
+	private function getNumberOfProductToPurchaseInCart(ProductToPurchase $productToPurchase)
 	{
-		$this->shoppingCart[] = $productToPurchase;
+		$searchedProduct = $productToPurchase->getProduct();
+
+		$numberOfProductToPurchase = false;
+
+		foreach ($this->shoppingCart as $number => $productToPurchaseInCart)
+		{
+			$product = $productToPurchaseInCart->getProduct();
+
+			if ($searchedProduct == $product)
+			{
+				$numberOfProductToPurchase = $number;
+				break;
+			}
+		}
+
+		return $numberOfProductToPurchase;
 	}
 
 	/**
-	 * Remove a product from purchase.
+	 * Modify the products in cart.
 	 *
-	 * @param int $numberOfPurchase   The number of the product to purchase.
+	 * @param ProductToPurchase $productToPurchase
 	 *
-	 * @return void
+	 * @return boolean
+	 *
+	 * @throws Exception
 	 */
-	public function remove($numberOfPurchase)
+	public function modify(ProductToPurchase $productToPurchase)
 	{
-		unset($this->shoppingCart[$numberOfPurchase]);
+		$number      = $this->getNumberOfProductToPurchaseInCart($productToPurchase);
+		$newQuantity = $productToPurchase->getQuantity();
+
+		if ($number !== false)
+		{
+			$quantityInCart = $this->shoppingCart[$number]->getQuantity();
+
+			// Deletes product from cart.
+			if ($quantityInCart + $newQuantity == 0)
+			{
+				unset($this->shoppingCart[$number]);
+			}
+			// Modifies quantity in cart.
+			elseif ($quantityInCart + $newQuantity > 0)
+			{
+				$this->shoppingCart[$number]->setQuantity($quantityInCart + $newQuantity);
+			}
+			// Invalid quantity.
+			else
+			{
+				throw new ShoppingCartException(ShoppingCartException::NEGATIV_QUANTITY_IN_CART);
+			}
+		}
+		else
+		{
+			// Adds product to cart.
+			if ($newQuantity > 0)
+			{
+				$this->shoppingCart[] = $productToPurchase;
+			}
+			// Product to purchase with invalid quantity.
+			else
+			{
+				throw new ShoppingCartException(ShoppingCartException::NEGATIV_OR_ZERO_QUANTITY_TO_ADD);
+			}
+		}
+
+		return true;
 	}
 
 }

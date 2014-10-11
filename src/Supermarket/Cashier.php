@@ -3,7 +3,6 @@
 namespace Kata\Supermarket;
 
 use Kata\Supermarket\ShoppingCart;
-use Kata\Supermarket\ProductToPurchase;
 
 /**
  * Cashier.

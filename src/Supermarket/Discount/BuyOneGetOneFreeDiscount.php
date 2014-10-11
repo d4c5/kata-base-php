@@ -5,9 +5,9 @@ namespace Kata\Supermarket\Discount;
 use Kata\Supermarket\ProductToPurchase;
 
 /**
- * Two paid one free discount.
+ * BOGOF discount.
  */
-class TwoPaidOneFreeDiscount extends DiscountAbstract
+class BuyOneGetOneFreeDiscount extends DiscountAbstract
 {
 	/**
 	 * The minimum quantity to discount.

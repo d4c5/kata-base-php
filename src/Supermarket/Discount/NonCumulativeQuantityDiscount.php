@@ -5,9 +5,9 @@ namespace Kata\Supermarket\Discount;
 use Kata\Supermarket\ProductToPurchase;
 
 /**
- * Lesser price discount.
+ * Non-cumulative quantity discount.
  */
-class LesserPriceDiscount extends DiscountAbstract
+class NonCumulativeQuantityDiscount extends DiscountAbstract
 {
 	/**
 	 * The discount price per unit.

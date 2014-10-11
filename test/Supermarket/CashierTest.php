@@ -97,7 +97,7 @@ class CashierTest extends \PHPUnit_Framework_TestCase
 	 */
 	private function getStubbedShoppingCart($purchases)
 	{
-		$stub = $this->getMock('\Kata\Supermarket\ShoppingCart', array('getShoppingCart'));
+		$stub = $this->getMock('\Kata\Supermarket\ShoppingCart');
 		$stub->expects($this->any())
 				->method('getShoppingCart')
 				->will($this->returnValue($purchases));
@@ -118,7 +118,23 @@ class CashierTest extends \PHPUnit_Framework_TestCase
 		$shoppingCart = $this->getStubbedShoppingCart($purchases);
 		$cashier      = new Cashier($shoppingCart);
 
-		// TODO: Mockolni a discount getPrice-t
+		$noneDiscount = $this->getMock('\Kata\Supermarket\Discount\NoneDiscount');
+		$noneDiscount->expects($this->any())
+				->method('getPrice')
+				->will($this->returnValue(5 * 15));
+
+		$nonCumulativeQuantityDiscount = $this->getMock('\Kata\Supermarket\Discount\NonCumulativeQuantityDiscount');
+		$nonCumulativeQuantityDiscount->method('getPrice')
+				->will($this->returnValueMap(array(
+					array(null, 2 * 32),
+					array(null, 1 * 32)
+				)));
+
+		$buyOneGetOneFreeDiscount = $this->getMock('\Kata\Supermarket\Discount\BuyOneGetOneFreeDiscount');
+		$buyOneGetOneFreeDiscount->expects($this->any())
+				->method('getPrice')
+				->will($this->returnValue(1 * 999.99));
+
 		$this->assertEquals($totalPrice, $cashier->getTotalPrice());
 	}
 
@@ -177,7 +193,23 @@ class CashierTest extends \PHPUnit_Framework_TestCase
 		$shoppingCart = $this->getStubbedShoppingCart($purchases);
 		$cashier      = new Cashier($shoppingCart);
 
-		// TODO: Mockolni a discount getPrice-t
+		$noneDiscount = $this->getMock('\Kata\Supermarket\Discount\NoneDiscount');
+		$noneDiscount->expects($this->any())
+				->method('getPrice')
+				->will($this->returnValue(5 * 15));
+
+		$nonCumulativeQuantityDiscount = $this->getMock('\Kata\Supermarket\Discount\NonCumulativeQuantityDiscount');
+		$nonCumulativeQuantityDiscount->method('getPrice')
+				->will($this->returnValueMap(array(
+					array(null, 7 * 25),
+					array(null, 8 * 25)
+				)));
+
+		$buyOneGetOneFreeDiscount = $this->getMock('\Kata\Supermarket\Discount\BuyOneGetOneFreeDiscount');
+		$buyOneGetOneFreeDiscount->expects($this->any())
+				->method('getPrice')
+				->will($this->returnValue(4 * 999.99));
+
 		$this->assertEquals($totalPrice, $cashier->getTotalPrice());
 	}
 

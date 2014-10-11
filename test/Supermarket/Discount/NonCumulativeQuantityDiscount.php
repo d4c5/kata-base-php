@@ -2,11 +2,11 @@
 
 namespace Kata\Test\Supermarket\Discount;
 
-use Kata\Supermarket\Discount\LesserPriceDiscount;
+use Kata\Supermarket\Discount\NonCumulativeQuantityDiscount;
 use Kata\Supermarket\Product;
 use Kata\Supermarket\ProductToPurchase;
 
-class LesserPriceDiscountTest extends \PHPUnit_Framework_TestCase
+class NonCumulativeQuantityDiscountTest extends \PHPUnit_Framework_TestCase
 {
 	/** Data of products and discounts. */
 	const PRODUCT_APPLE_ID    = 0;
@@ -47,7 +47,7 @@ class LesserPriceDiscountTest extends \PHPUnit_Framework_TestCase
 	 */
 	private function setAppleProduct()
 	{
-		$appleDiscount = new LesserPriceDiscount();
+		$appleDiscount = new NonCumulativeQuantityDiscount();
 		$appleDiscount->setMinimumQuantity(self::DISCOUNT_APPLE_MIN_QUANTITY);
 		$appleDiscount->setDiscountPricePerUnit(self::DISCOUNT_APPLE_PRICE);
 

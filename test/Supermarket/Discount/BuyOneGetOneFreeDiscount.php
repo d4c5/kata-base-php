@@ -2,11 +2,11 @@
 
 namespace Kata\Test\Supermarket\Discount;
 
-use Kata\Supermarket\Discount\TwoPaidOneFreeDiscount;
+use Kata\Supermarket\Discount\BuyOneGetOneFreeDiscount;
 use Kata\Supermarket\Product;
 use Kata\Supermarket\ProductToPurchase;
 
-class TwoPaidOneFreeDiscountTest extends \PHPUnit_Framework_TestCase
+class BuyOneGetOneFreeDiscountTest extends \PHPUnit_Framework_TestCase
 {
 	/** Data of products and discounts. */
 	const PRODUCT_STARSHIP_ID    = 2;
@@ -47,7 +47,7 @@ class TwoPaidOneFreeDiscountTest extends \PHPUnit_Framework_TestCase
 	 */
 	private function setStarshipProduct()
 	{
-		$starshipDiscount = new TwoPaidOneFreeDiscount();
+		$starshipDiscount = new BuyOneGetOneFreeDiscount();
 		$starshipDiscount->setMinimumQuantity(self::DISCOUNT_STARSHIP_MIN_QUANTITY);
 		$starshipDiscount->setFreeQuantity(self::DISCOUNT_STARSHIP_FREE_QUANTITY);
 

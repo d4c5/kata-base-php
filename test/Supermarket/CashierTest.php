@@ -4,15 +4,14 @@ namespace Kata\Test\Supermarket;
 
 use Kata\Supermarket\Cashier;
 use Kata\Supermarket\Discount\NoneDiscount;
-use Kata\Supermarket\Discount\LesserPriceDiscount;
-use Kata\Supermarket\Discount\TwoPaidOneFreeDiscount;
+use Kata\Supermarket\Discount\NonCumulativeQuantityDiscount;
+use Kata\Supermarket\Discount\BuyOneGetOneFreeDiscount;
 use Kata\Supermarket\Product;
 use Kata\Supermarket\ProductToPurchase;
 
 class CashierTest extends \PHPUnit_Framework_TestCase
 {
 	/** Data of products and discounts. */
-	const PRODUCT_APPLE_ID    = 0;
 	const PRODUCT_APPLE_NAME  = 'Name';
 	const PRODUCT_APPLE_PRICE = 32;
 	const PRODUCT_APPLE_UNIT  = 'kg';
@@ -20,12 +19,10 @@ class CashierTest extends \PHPUnit_Framework_TestCase
 	const DISCOUNT_APPLE_MIN_QUANTITY = 5.0;
 	const DISCOUNT_APPLE_PRICE        = 25;
 
-	const PRODUCT_LIGHT_ID    = 1;
 	const PRODUCT_LIGHT_NAME  = 'Light';
 	const PRODUCT_LIGHT_PRICE = 15;
 	const PRODUCT_LIGHT_UNIT  = 'year';
 
-	const PRODUCT_STARSHIP_ID    = 2;
 	const PRODUCT_STARSHIP_NAME  = 'Starship';
 	const PRODUCT_STARSHIP_PRICE = 999.99;
 	const PRODUCT_STARSHIP_UNIT  = 'piece';
@@ -34,40 +31,13 @@ class CashierTest extends \PHPUnit_Framework_TestCase
 	const DISCOUNT_STARSHIP_FREE_QUANTITY = 1;
 
 	/**
-	 * Products.
-	 *
-	 * @var array
-	 */
-	private $products = array();
-
-	/**
-	 * Tests the calculation of the cashier.
-	 *
-	 * @param float $totalPrice
-	 * @param array $purchases
-	 *
-	 * @dataProvider providerPurchase
-	 */
-	public function testTotalPrice($totalPrice, $purchases)
-	{
-		$stub = $this->getMock('\Kata\Supermarket\ShoppingCart', array('getShoppingCart'));
-		$stub->expects($this->any())
-				->method('getShoppingCart')
-				->will($this->returnValue($purchases));
-
-		$cashier = new Cashier($stub);
-
-		$this->assertEquals($totalPrice, $cashier->getTotalPrice());
-	}
-
-	/**
 	 * Sets properties of the apple product.
 	 *
-	 * @return void
+	 * @return Product
 	 */
 	private function setAppleProduct()
 	{
-		$appleDiscount = new LesserPriceDiscount();
+		$appleDiscount = new NonCumulativeQuantityDiscount();
 		$appleDiscount->setMinimumQuantity(self::DISCOUNT_APPLE_MIN_QUANTITY);
 		$appleDiscount->setDiscountPricePerUnit(self::DISCOUNT_APPLE_PRICE);
 
@@ -77,13 +47,13 @@ class CashierTest extends \PHPUnit_Framework_TestCase
 		$apple->setUnit(self::PRODUCT_APPLE_UNIT);
 		$apple->setDiscount($appleDiscount);
 
-		$this->products[self::PRODUCT_APPLE_ID] = $apple;
+		return $apple;
 	}
 
 	/**
 	 * Sets properties of the light product.
 	 *
-	 * @return void
+	 * @return Product
 	 */
 	private function setLightProduct()
 	{
@@ -95,17 +65,17 @@ class CashierTest extends \PHPUnit_Framework_TestCase
 		$light->setUnit(self::PRODUCT_LIGHT_UNIT);
 		$light->setDiscount($lightDiscount);
 
-		$this->products[self::PRODUCT_LIGHT_ID] = $light;
+		return $light;
 	}
 
 	/**
 	 * Sets properties of the starship product.
 	 *
-	 * @return void
+	 * @return Product
 	 */
 	private function setStarshipProduct()
 	{
-		$starshipDiscount = new TwoPaidOneFreeDiscount();
+		$starshipDiscount = new BuyOneGetOneFreeDiscount();
 		$starshipDiscount->setMinimumQuantity(self::DISCOUNT_STARSHIP_MIN_QUANTITY);
 		$starshipDiscount->setFreeQuantity(self::DISCOUNT_STARSHIP_FREE_QUANTITY);
 
@@ -115,38 +85,78 @@ class CashierTest extends \PHPUnit_Framework_TestCase
 		$starship->setUnit(self::PRODUCT_STARSHIP_UNIT);
 		$starship->setDiscount($starshipDiscount);
 
-		$this->products[self::PRODUCT_STARSHIP_ID] = $starship;
+		return $starship;
 	}
 
 	/**
-	 * Returns normal test purchases.
+	 * Returns stubbed cashier object.
+	 *
+	 * @param array $purchases
+	 *
+	 * @return Cashier
+	 */
+	private function getStubbedShoppingCart($purchases)
+	{
+		$stub = $this->getMock('\Kata\Supermarket\ShoppingCart', array('getShoppingCart'));
+		$stub->expects($this->any())
+				->method('getShoppingCart')
+				->will($this->returnValue($purchases));
+
+		return $stub;
+	}
+
+	/**
+	 * Tests the calculation of the cashier.
+	 *
+	 * @param float $totalPrice
+	 * @param array $purchases
+	 *
+	 * @dataProvider providerNormalPurchases
+	 */
+	public function testTotalPriceOfNormalPurchases($totalPrice, $purchases)
+	{
+		$shoppingCart = $this->getStubbedShoppingCart($purchases);
+		$cashier      = new Cashier($shoppingCart);
+
+		// TODO: Mockolni a discount getPrice-t
+		$this->assertEquals($totalPrice, $cashier->getTotalPrice());
+	}
+
+	/**
+	 * Test purchases with normal price.
+	 *
+	 * Total price, the content of shopping cart.
 	 *
 	 * @return array
 	 */
-	private function getNormalTestData()
+	public function providerNormalPurchases()
 	{
+		$appleProduct    = $this->setAppleProduct();
+		$lightProduct    = $this->setLightProduct();
+		$starshipProduct = $this->setStarshipProduct();
+
 		$purchases = array();
 
 		$test1 = new ProductToPurchase();
-		$test1->setProduct($this->products[self::PRODUCT_APPLE_ID]);
+		$test1->setProduct($appleProduct);
 		$test1->setQuantity(2.0);
 
 		$purchases[] = array(64, array($test1));
 
 
 		$test21 = new ProductToPurchase();
-		$test21->setProduct($this->products[self::PRODUCT_LIGHT_ID]);
+		$test21->setProduct($lightProduct);
 		$test21->setQuantity(5);
 
 		$test22 = new ProductToPurchase();
-		$test22->setProduct($this->products[self::PRODUCT_APPLE_ID]);
+		$test22->setProduct($appleProduct);
 		$test22->setQuantity(1.0);
 
 		$purchases[] = array(107, array($test21, $test22));
 
 
 		$test3 = new ProductToPurchase();
-		$test3->setProduct($this->products[self::PRODUCT_STARSHIP_ID]);
+		$test3->setProduct($starshipProduct);
 		$test3->setQuantity(1);
 
 		$purchases[] = array(999.99, array($test3));
@@ -155,61 +165,60 @@ class CashierTest extends \PHPUnit_Framework_TestCase
 	}
 
 	/**
+	 * Tests the calculation of the cashier.
+	 *
+	 * @param float $totalPrice
+	 * @param array $purchases
+	 *
+	 * @dataProvider providerDiscountPurchases
+	 */
+	public function testTotalPriceOfDiscountPurchases($totalPrice, $purchases)
+	{
+		$shoppingCart = $this->getStubbedShoppingCart($purchases);
+		$cashier      = new Cashier($shoppingCart);
+
+		// TODO: Mockolni a discount getPrice-t
+		$this->assertEquals($totalPrice, $cashier->getTotalPrice());
+	}
+
+	/**
 	 * Returns discount test purchases.
 	 *
 	 * @return array
 	 */
-	private function getDiscountTestData()
+	public function providerDiscountPurchases()
 	{
+		$appleProduct    = $this->setAppleProduct();
+		$lightProduct    = $this->setLightProduct();
+		$starshipProduct = $this->setStarshipProduct();
+
 		$purchases = array();
 
 		$test4 = new ProductToPurchase();
-		$test4->setProduct($this->products[self::PRODUCT_APPLE_ID]);
+		$test4->setProduct($appleProduct);
 		$test4->setQuantity(7.0);
 
 		$purchases[] = array(175, array($test4));
 
 
 		$test51 = new ProductToPurchase();
-		$test51->setProduct($this->products[self::PRODUCT_LIGHT_ID]);
+		$test51->setProduct($lightProduct);
 		$test51->setQuantity(5);
 
 		$test52 = new ProductToPurchase();
-		$test52->setProduct($this->products[self::PRODUCT_APPLE_ID]);
+		$test52->setProduct($appleProduct);
 		$test52->setQuantity(8.0);
 
 		$purchases[] = array(275, array($test51, $test52));
 
 
 		$test6 = new ProductToPurchase();
-		$test6->setProduct($this->products[self::PRODUCT_STARSHIP_ID]);
+		$test6->setProduct($starshipProduct);
 		$test6->setQuantity(6);
 
 		$purchases[] = array(3999.96, array($test6));
 
 		return $purchases;
-	}
-
-	/**
-	 * Test purchases.
-	 *
-	 * Total price, the content of shopping cart.
-	 *
-	 * @return array
-	 */
-	public function providerPurchase()
-	{
-		$this->setAppleProduct();
-		$this->setLightProduct();
-		$this->setStarshipProduct();
-
-		$normalPurchases   = $this->getNormalTestData();
-		$discountPurchases = $this->getDiscountTestData();
-
-		return array_merge(
-			$normalPurchases,
-			$discountPurchases
-		);
 	}
 
 }

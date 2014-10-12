@@ -3,9 +3,6 @@
 namespace Kata\Test\Supermarket;
 
 use Kata\Supermarket\Cashier;
-use Kata\Supermarket\Discount\NoneDiscount;
-use Kata\Supermarket\Discount\NonCumulativeQuantityDiscount;
-use Kata\Supermarket\Discount\BuyOneGetOneFreeDiscount;
 use Kata\Supermarket\Product;
 use Kata\Supermarket\ProductToPurchase;
 
@@ -16,9 +13,6 @@ class CashierTest extends \PHPUnit_Framework_TestCase
 	const PRODUCT_APPLE_PRICE = 32;
 	const PRODUCT_APPLE_UNIT  = 'kg';
 
-	const DISCOUNT_APPLE_MIN_QUANTITY = 5.0;
-	const DISCOUNT_APPLE_PRICE        = 25;
-
 	const PRODUCT_LIGHT_NAME  = 'Light';
 	const PRODUCT_LIGHT_PRICE = 15;
 	const PRODUCT_LIGHT_UNIT  = 'year';
@@ -27,19 +21,46 @@ class CashierTest extends \PHPUnit_Framework_TestCase
 	const PRODUCT_STARSHIP_PRICE = 999.99;
 	const PRODUCT_STARSHIP_UNIT  = 'piece';
 
-	const DISCOUNT_STARSHIP_MIN_QUANTITY  = 2;
-	const DISCOUNT_STARSHIP_FREE_QUANTITY = 1;
+	/** Price flags */
+	const PRODUCT_WITH_DISCOUNT_PRICE = 0;
+	const PRODUCT_WITH_NORMAL_PRICE   = 1;
+
+	/**
+	 * Returns stubbed discount object.
+	 *
+	 * @param array $priceType
+	 *
+	 * @return NonCumulativeQuantityDiscount
+	 */
+	private function getStubbedAppleDiscount($priceType = self::PRODUCT_WITH_NORMAL_PRICE)
+	{
+		if ($priceType === self::PRODUCT_WITH_DISCOUNT_PRICE)
+		{
+			$returnValues = $this->onConsecutiveCalls(7.0 * 25, 8.0 * 25);
+		}
+		else
+		{
+			$returnValues = $this->onConsecutiveCalls(2.0 * 32, 1.0 * 32);
+		}
+
+		$appleDiscount = $this->getMock('\Kata\Supermarket\Discount\NonCumulativeQuantityDiscount');
+		$appleDiscount->expects($this->any())
+				->method('getPrice')
+				->will($returnValues);
+
+		return $appleDiscount;
+	}
 
 	/**
 	 * Sets properties of the apple product.
 	 *
+	 * @param int $priceType
+	 *
 	 * @return Product
 	 */
-	private function setAppleProduct()
+	private function setAppleProduct($priceType = self::PRODUCT_WITH_NORMAL_PRICE)
 	{
-		$appleDiscount = new NonCumulativeQuantityDiscount();
-		$appleDiscount->setMinimumQuantity(self::DISCOUNT_APPLE_MIN_QUANTITY);
-		$appleDiscount->setDiscountPricePerUnit(self::DISCOUNT_APPLE_PRICE);
+		$appleDiscount = $this->getStubbedAppleDiscount($priceType);
 
 		$apple = new Product();
 		$apple->setName(self::PRODUCT_APPLE_NAME);
@@ -51,13 +72,41 @@ class CashierTest extends \PHPUnit_Framework_TestCase
 	}
 
 	/**
+	 * Returns stubbed discount object.
+	 *
+	 * @param array $priceType
+	 *
+	 * @return NoneDiscount
+	 */
+	private function getStubbedLightDiscount($priceType = self::PRODUCT_WITH_NORMAL_PRICE)
+	{
+		if ($priceType === self::PRODUCT_WITH_DISCOUNT_PRICE)
+		{
+			$returnValues = $this->onConsecutiveCalls(5 * 15);
+		}
+		else
+		{
+			$returnValues = $this->onConsecutiveCalls(5 * 15);
+		}
+
+		$lightDiscount = $this->getMock('\Kata\Supermarket\Discount\NoneDiscount');
+		$lightDiscount->expects($this->any())
+				->method('getPrice')
+				->will($this->onConsecutiveCalls(5 * 15));
+
+		return $lightDiscount;
+	}
+
+	/**
 	 * Sets properties of the light product.
+	 *
+	 * @param int $priceType
 	 *
 	 * @return Product
 	 */
-	private function setLightProduct()
+	private function setLightProduct($priceType = self::PRODUCT_WITH_NORMAL_PRICE)
 	{
-		$lightDiscount = new NoneDiscount();
+		$lightDiscount = $this->getStubbedLightDiscount($priceType);
 
 		$light = new Product();
 		$light->setName(self::PRODUCT_LIGHT_NAME);
@@ -69,15 +118,41 @@ class CashierTest extends \PHPUnit_Framework_TestCase
 	}
 
 	/**
+	 * Returns stubbed discount object.
+	 *
+	 * @param array $priceType
+	 *
+	 * @return BuyOneGetOneFreeDiscount
+	 */
+	private function getStubbedStarshipDiscount($priceType = self::PRODUCT_WITH_NORMAL_PRICE)
+	{
+		if ($priceType === self::PRODUCT_WITH_DISCOUNT_PRICE)
+		{
+			$returnValues = $this->onConsecutiveCalls(4 * 999.99);
+		}
+		else
+		{
+			$returnValues = $this->onConsecutiveCalls(1 * 999.99);
+		}
+
+		$starshipDiscount = $this->getMock('\Kata\Supermarket\Discount\BuyOneGetOneFreeDiscount');
+		$starshipDiscount->expects($this->any())
+				->method('getPrice')
+				->will($returnValues);
+
+		return $starshipDiscount;
+	}
+
+	/**
 	 * Sets properties of the starship product.
+	 *
+	 * @param int $priceType
 	 *
 	 * @return Product
 	 */
-	private function setStarshipProduct()
+	private function setStarshipProduct($priceType = self::PRODUCT_WITH_NORMAL_PRICE)
 	{
-		$starshipDiscount = new BuyOneGetOneFreeDiscount();
-		$starshipDiscount->setMinimumQuantity(self::DISCOUNT_STARSHIP_MIN_QUANTITY);
-		$starshipDiscount->setFreeQuantity(self::DISCOUNT_STARSHIP_FREE_QUANTITY);
+		$starshipDiscount = $this->getStubbedStarshipDiscount($priceType);
 
 		$starship = new Product();
 		$starship->setName(self::PRODUCT_STARSHIP_NAME);
@@ -117,23 +192,6 @@ class CashierTest extends \PHPUnit_Framework_TestCase
 	{
 		$shoppingCart = $this->getStubbedShoppingCart($purchases);
 		$cashier      = new Cashier($shoppingCart);
-
-		$noneDiscount = $this->getMock('\Kata\Supermarket\Discount\NoneDiscount');
-		$noneDiscount->expects($this->any())
-				->method('getPrice')
-				->will($this->returnValue(5 * 15));
-
-		$nonCumulativeQuantityDiscount = $this->getMock('\Kata\Supermarket\Discount\NonCumulativeQuantityDiscount');
-		$nonCumulativeQuantityDiscount->method('getPrice')
-				->will($this->returnValueMap(array(
-					array(null, 2 * 32),
-					array(null, 1 * 32)
-				)));
-
-		$buyOneGetOneFreeDiscount = $this->getMock('\Kata\Supermarket\Discount\BuyOneGetOneFreeDiscount');
-		$buyOneGetOneFreeDiscount->expects($this->any())
-				->method('getPrice')
-				->will($this->returnValue(1 * 999.99));
 
 		$this->assertEquals($totalPrice, $cashier->getTotalPrice());
 	}
@@ -193,23 +251,6 @@ class CashierTest extends \PHPUnit_Framework_TestCase
 		$shoppingCart = $this->getStubbedShoppingCart($purchases);
 		$cashier      = new Cashier($shoppingCart);
 
-		$noneDiscount = $this->getMock('\Kata\Supermarket\Discount\NoneDiscount');
-		$noneDiscount->expects($this->any())
-				->method('getPrice')
-				->will($this->returnValue(5 * 15));
-
-		$nonCumulativeQuantityDiscount = $this->getMock('\Kata\Supermarket\Discount\NonCumulativeQuantityDiscount');
-		$nonCumulativeQuantityDiscount->method('getPrice')
-				->will($this->returnValueMap(array(
-					array(null, 7 * 25),
-					array(null, 8 * 25)
-				)));
-
-		$buyOneGetOneFreeDiscount = $this->getMock('\Kata\Supermarket\Discount\BuyOneGetOneFreeDiscount');
-		$buyOneGetOneFreeDiscount->expects($this->any())
-				->method('getPrice')
-				->will($this->returnValue(4 * 999.99));
-
 		$this->assertEquals($totalPrice, $cashier->getTotalPrice());
 	}
 
@@ -220,9 +261,9 @@ class CashierTest extends \PHPUnit_Framework_TestCase
 	 */
 	public function providerDiscountPurchases()
 	{
-		$appleProduct    = $this->setAppleProduct();
-		$lightProduct    = $this->setLightProduct();
-		$starshipProduct = $this->setStarshipProduct();
+		$appleProduct    = $this->setAppleProduct(self::PRODUCT_WITH_DISCOUNT_PRICE);
+		$lightProduct    = $this->setLightProduct(self::PRODUCT_WITH_DISCOUNT_PRICE);
+		$starshipProduct = $this->setStarshipProduct(self::PRODUCT_WITH_DISCOUNT_PRICE);
 
 		$purchases = array();
 

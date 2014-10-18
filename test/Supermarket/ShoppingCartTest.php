@@ -9,14 +9,14 @@ use Kata\Supermarket\Discount\NoneDiscount;
 
 class ShoppingCartTest extends \PHPUnit_Framework_TestCase
 {
-	/** Data of test products */
-	const PRODUCT_TEST1_NAME  = 'Test 1';
-	const PRODUCT_TEST1_PRICE = 1;
-	const PRODUCT_TEST1_UNIT  = 'unit';
+	/** Data of products. */
+	const PRODUCT_APPLE_NAME  = 'Apple';
+	const PRODUCT_APPLE_PRICE = 32;
+	const PRODUCT_APPLE_UNIT  = 'kg';
 
-	const PRODUCT_TEST2_NAME  = 'Test 2';
-	const PRODUCT_TEST2_PRICE = 2;
-	const PRODUCT_TEST2_UNIT  = 'unit';
+	const PRODUCT_LIGHT_NAME  = 'Light';
+	const PRODUCT_LIGHT_PRICE = 15;
+	const PRODUCT_LIGHT_UNIT  = 'year';
 
 	/**
 	 * Shopping cart object.
@@ -24,46 +24,6 @@ class ShoppingCartTest extends \PHPUnit_Framework_TestCase
 	 * @var ShoppingCart
 	 */
 	private $shoppingCart = null;
-
-	/**
-	 * Test1 product object.
-	 *
-	 * @var Product
-	 */
-	private $testProduct1 = null;
-
-	/**
-	 * Test2 product object.
-	 *
-	 * @var Product
-	 */
-	private $testProduct2 = null;
-
-	/**
-	 * Sets the test product objects.
-	 *
-	 * @return void
-	 */
-	public function __construct($name = NULL, array $data = array(), $dataName = '')
-	{
-		$testProduct1Discount = new NoneDiscount();
-
-		$this->testProduct1 = new Product();
-		$this->testProduct1->setName(self::PRODUCT_TEST1_NAME);
-		$this->testProduct1->setPricePerUnit(self::PRODUCT_TEST1_PRICE);
-		$this->testProduct1->setUnit(self::PRODUCT_TEST1_UNIT);
-		$this->testProduct1->setDiscount($testProduct1Discount);
-
-		$testProduct2Discount = new NoneDiscount();
-
-		$this->testProduct2 = new Product();
-		$this->testProduct2->setName(self::PRODUCT_TEST2_NAME);
-		$this->testProduct2->setPricePerUnit(self::PRODUCT_TEST2_PRICE);
-		$this->testProduct2->setUnit(self::PRODUCT_TEST2_UNIT);
-		$this->testProduct2->setDiscount($testProduct2Discount);
-
-		parent::__construct($name, $data, $dataName);
-	}
 
 	/**
 	 * Sets the cart object.
@@ -79,19 +39,22 @@ class ShoppingCartTest extends \PHPUnit_Framework_TestCase
 	 * Tests that the quantity in cart is negative.
 	 *
      * @expectedException Kata\Supermarket\ShoppingCartException
+	 * @expectedExceptionCode 301
      */
     public function testNegativeQuantityInCartException()
     {
-		// Adds 5 Test1 products to cart.
+		$appleProduct = $this->getAppleProduct();
+
+		// Adds 5.0 kg apple to cart.
 		$productToPurchase1 = new ProductToPurchase();
-		$productToPurchase1->setProduct($this->testProduct1);
+		$productToPurchase1->setProduct($appleProduct);
 		$productToPurchase1->setQuantity(5);
 
 		$this->shoppingCart->modify($productToPurchase1);
 
-		// Removes 10 Test1 products to cart.
+		// Removes 10 kg apple from cart.
 		$productToPurchase2 = new ProductToPurchase();
-		$productToPurchase2->setProduct($this->testProduct1);
+		$productToPurchase2->setProduct($appleProduct);
 		$productToPurchase2->setQuantity(-10);
 
 		$this->shoppingCart->modify($productToPurchase2);
@@ -101,12 +64,15 @@ class ShoppingCartTest extends \PHPUnit_Framework_TestCase
 	 * Tests that the quantity in adding is negative.
 	 *
      * @expectedException Kata\Supermarket\ShoppingCartException
+	 * @expectedExceptionCode 302
      */
     public function testNegativeQuantityToAddException()
     {
-		// Adds -5 Test1 products to cart.
+		$lightProduct = $this->getLightProduct();
+
+		// Adds -5 light to cart.
 		$productToPurchase1 = new ProductToPurchase();
-		$productToPurchase1->setProduct($this->testProduct1);
+		$productToPurchase1->setProduct($lightProduct);
 		$productToPurchase1->setQuantity(-5);
 
 		$this->shoppingCart->modify($productToPurchase1);
@@ -120,7 +86,7 @@ class ShoppingCartTest extends \PHPUnit_Framework_TestCase
 	 *
 	 * @dataProvider providerProductsToPurchase
 	 */
-	public function testAdding($productsToAdd, $productsInCart)
+	public function testAdding(array $productsToAdd, array $productsInCart)
 	{
 		foreach ($productsToAdd as $dataOfPurchase)
 		{
@@ -150,26 +116,29 @@ class ShoppingCartTest extends \PHPUnit_Framework_TestCase
 	 */
 	public function providerProductsToPurchase()
 	{
+		$appleProduct = $this->getAppleProduct();
+		$lightProduct = $this->getLightProduct();
+
 		return array(
 			array(
 				// Products to add.
 				array(
-					array('product' => $this->testProduct1, 'quantity' => 10),
-					array('product' => $this->testProduct2, 'quantity' => 5),
-					array('product' => $this->testProduct1, 'quantity' => 5),
+					array('product' => $appleProduct, 'quantity' => 10),
+					array('product' => $lightProduct, 'quantity' => 5),
+					array('product' => $appleProduct, 'quantity' => 5),
 				),
 				// Products in cart.
 				array(
-					array('product' => $this->testProduct1, 'quantity' => 15),
-					array('product' => $this->testProduct2, 'quantity' => 5),
+					array('product' => $appleProduct, 'quantity' => 15),
+					array('product' => $lightProduct, 'quantity' => 5),
 				),
 			),
 			array(
 				// Products to add.
 				array(
-					array('product' => $this->testProduct1, 'quantity' => 10),
-					array('product' => $this->testProduct1, 'quantity' => -5),
-					array('product' => $this->testProduct1, 'quantity' => -5),
+					array('product' => $appleProduct, 'quantity' => 10),
+					array('product' => $appleProduct, 'quantity' => -5),
+					array('product' => $appleProduct, 'quantity' => -5),
 				),
 				// Products in cart.
 				array(),
@@ -177,16 +146,56 @@ class ShoppingCartTest extends \PHPUnit_Framework_TestCase
 			array(
 				// Products to add.
 				array(
-					array('product' => $this->testProduct1, 'quantity' => 10),
-					array('product' => $this->testProduct2, 'quantity' => 5),
-					array('product' => $this->testProduct1, 'quantity' => -10),
+					array('product' => $appleProduct, 'quantity' => 10),
+					array('product' => $lightProduct, 'quantity' => 5),
+					array('product' => $appleProduct, 'quantity' => -10),
 				),
 				// Products in cart.
 				array(
-					array('product' => $this->testProduct2, 'quantity' => 5),
+					array('product' => $lightProduct, 'quantity' => 5),
 				),
 			),
 		);
+	}
+
+	/**
+	 * Sets properties of the apple product.
+	 *
+	 * @param int $priceType
+	 *
+	 * @return Product
+	 */
+	private function getAppleProduct()
+	{
+		$appleDiscount = new NoneDiscount();
+
+		$apple = new Product();
+		$apple->setName(self::PRODUCT_APPLE_NAME);
+		$apple->setPricePerUnit(self::PRODUCT_APPLE_PRICE);
+		$apple->setUnit(self::PRODUCT_APPLE_UNIT);
+		$apple->setDiscount($appleDiscount);
+
+		return $apple;
+	}
+
+	/**
+	 * Returns light product.
+	 *
+	 * @param int $priceType
+	 *
+	 * @return Product
+	 */
+	private function getLightProduct()
+	{
+		$lightDiscount = new NoneDiscount();
+
+		$light = new Product();
+		$light->setName(self::PRODUCT_LIGHT_NAME);
+		$light->setPricePerUnit(self::PRODUCT_LIGHT_PRICE);
+		$light->setUnit(self::PRODUCT_LIGHT_UNIT);
+		$light->setDiscount($lightDiscount);
+
+		return $light;
 	}
 
 }

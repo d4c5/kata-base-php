@@ -14,6 +14,6 @@ class ShoppingCartException extends \Exception
 
 	public function __construct($messageCode, $code = 0, Exception $previous = null)
 	{
-		parent::__construct(self::$errorMessages[$messageCode], $code, $previous);
+		parent::__construct(self::$errorMessages[$messageCode], !empty($code) ? $code : $messageCode, $previous);
 	}
 }

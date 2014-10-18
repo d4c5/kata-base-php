@@ -24,15 +24,22 @@ class ProductToPurchase
 	private $quantity = 0.0;
 
 	/**
-	 * Sets the product.
+	 * Sets the product and quantity.
 	 *
 	 * @param Product $product
+	 * @param int     $quantity
 	 *
-	 * @return void
+	 * @throws ShoppingCartException
 	 */
-	public function setProduct(Product $product)
+	public function __construct(Product $product, $quantity)
 	{
-		$this->product = $product;
+		if (!is_numeric($quantity))
+		{
+			throw new ProductToPurchaseException(ProductToPurchaseException::NOT_NUMERIC_QUANTITY);
+		}
+
+		$this->product  = $product;
+		$this->quantity = $quantity;
 	}
 
 	/**

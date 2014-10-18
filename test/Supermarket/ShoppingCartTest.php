@@ -3,7 +3,6 @@
 namespace Kata\Test\Supermarket;
 
 use Kata\Supermarket\ShoppingCart;
-use Kata\Supermarket\ProductToPurchase;
 use Kata\Supermarket\Product;
 use Kata\Supermarket\Discount\NoneDiscount;
 
@@ -46,18 +45,10 @@ class ShoppingCartTest extends \PHPUnit_Framework_TestCase
 		$appleProduct = $this->getAppleProduct();
 
 		// Adds 5.0 kg apple to cart.
-		$productToPurchase1 = new ProductToPurchase();
-		$productToPurchase1->setProduct($appleProduct);
-		$productToPurchase1->setQuantity(5);
-
-		$this->shoppingCart->modify($productToPurchase1);
+		$this->shoppingCart->modify($appleProduct, 5);
 
 		// Removes 10 kg apple from cart.
-		$productToPurchase2 = new ProductToPurchase();
-		$productToPurchase2->setProduct($appleProduct);
-		$productToPurchase2->setQuantity(-10);
-
-		$this->shoppingCart->modify($productToPurchase2);
+		$this->shoppingCart->modify($appleProduct, -10);
     }
 
 	/**
@@ -71,11 +62,7 @@ class ShoppingCartTest extends \PHPUnit_Framework_TestCase
 		$lightProduct = $this->getLightProduct();
 
 		// Adds -5 light to cart.
-		$productToPurchase1 = new ProductToPurchase();
-		$productToPurchase1->setProduct($lightProduct);
-		$productToPurchase1->setQuantity(-5);
-
-		$this->shoppingCart->modify($productToPurchase1);
+		$this->shoppingCart->modify($lightProduct, -5);
     }
 
 	/**
@@ -90,19 +77,17 @@ class ShoppingCartTest extends \PHPUnit_Framework_TestCase
 	{
 		foreach ($productsToAdd as $dataOfPurchase)
 		{
-			$productToPurchase = new ProductToPurchase();
-			$productToPurchase->setProduct($dataOfPurchase['product']);
-			$productToPurchase->setQuantity($dataOfPurchase['quantity']);
-
-			$this->shoppingCart->modify($productToPurchase);
+			$this->shoppingCart->modify($dataOfPurchase['product'], $dataOfPurchase['quantity']);
 		}
 
 		// Number of products in the cart.
 		$shoppingCartList = $this->shoppingCart->getShoppingCart();
 		$this->assertEquals(count($productsInCart), count($shoppingCartList));
 
+		$reindexedShoppingCartList = $this->reindexCart($shoppingCartList);
+
 		// Quantities and types of products in the cart.
-		foreach ($shoppingCartList as $number => $productToPurchase)
+		foreach ($reindexedShoppingCartList as $number => $productToPurchase)
 		{
 			$this->assertEquals($productsInCart[$number]['quantity'], $productToPurchase->getQuantity());
 			$this->assertEquals($productsInCart[$number]['product'],  $productToPurchase->getProduct());
@@ -196,6 +181,18 @@ class ShoppingCartTest extends \PHPUnit_Framework_TestCase
 		$light->setDiscount($lightDiscount);
 
 		return $light;
+	}
+
+	/**
+	 * Reindexes the shopping cart to check.
+	 *
+	 * @param array $shoppingCart
+	 *
+	 * @return array
+	 */
+	private function reindexCart(array $shoppingCart)
+	{
+		return array_values($shoppingCart);
 	}
 
 }

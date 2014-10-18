@@ -34,7 +34,7 @@ class CashierTest extends \PHPUnit_Framework_TestCase
 	 *
 	 * @dataProvider providerNormalPurchases
 	 */
-	public function testTotalPriceOfNormalPurchases($totalPrice, $purchases)
+	public function testTotalPriceOfNormalPurchases($totalPrice, array $purchases)
 	{
 		$shoppingCart = $this->getStubbedShoppingCart($purchases);
 		$cashier      = new Cashier($shoppingCart);
@@ -55,33 +55,27 @@ class CashierTest extends \PHPUnit_Framework_TestCase
 		$lightProduct    = $this->getLightProduct();
 		$starshipProduct = $this->getStarshipProduct();
 
-		$purchases = array();
-
-		$test1 = new ProductToPurchase();
-		$test1->setProduct($appleProduct);
-		$test1->setQuantity(2.0);
-
-		$purchases[] = array(2.0 * self::PRODUCT_APPLE_PRICE, array($test1));
-
-
-		$test21 = new ProductToPurchase();
-		$test21->setProduct($lightProduct);
-		$test21->setQuantity(5);
-
-		$test22 = new ProductToPurchase();
-		$test22->setProduct($appleProduct);
-		$test22->setQuantity(1.0);
-
-		$purchases[] = array(5 * self::PRODUCT_LIGHT_PRICE + 1.0 * self::PRODUCT_APPLE_PRICE, array($test21, $test22));
-
-
-		$test3 = new ProductToPurchase();
-		$test3->setProduct($starshipProduct);
-		$test3->setQuantity(1);
-
-		$purchases[] = array(1 * self::PRODUCT_STARSHIP_PRICE, array($test3));
-
-		return $purchases;
+		return array(
+			array(
+				2.0 * self::PRODUCT_APPLE_PRICE,
+				array(
+					new ProductToPurchase($appleProduct, 2.0),
+				),
+			),
+			array(
+				5 * self::PRODUCT_LIGHT_PRICE + 1.0 * self::PRODUCT_APPLE_PRICE,
+				array(
+					new ProductToPurchase($lightProduct, 5),
+					new ProductToPurchase($appleProduct, 1.0),
+				),
+			),
+			array(
+				1 * self::PRODUCT_STARSHIP_PRICE,
+				array(
+					new ProductToPurchase($starshipProduct, 1),
+				),
+			),
+		);
 	}
 
 	/**
@@ -92,7 +86,7 @@ class CashierTest extends \PHPUnit_Framework_TestCase
 	 *
 	 * @dataProvider providerDiscountPurchases
 	 */
-	public function testTotalPriceOfDiscountPurchases($totalPrice, $purchases)
+	public function testTotalPriceOfDiscountPurchases($totalPrice, array $purchases)
 	{
 		$shoppingCart = $this->getStubbedShoppingCart($purchases);
 		$cashier      = new Cashier($shoppingCart);
@@ -111,39 +105,33 @@ class CashierTest extends \PHPUnit_Framework_TestCase
 		$lightProduct    = $this->getLightProduct(self::PRODUCT_WITH_DISCOUNT_PRICE);
 		$starshipProduct = $this->getStarshipProduct(self::PRODUCT_WITH_DISCOUNT_PRICE);
 
-		$purchases = array();
-
-		$test4 = new ProductToPurchase();
-		$test4->setProduct($appleProduct);
-		$test4->setQuantity(7.0);
-
-		$purchases[] = array(7.0 * self::PRODUCT_APPLE_DISCOUNT_PRICE, array($test4));
-
-
-		$test51 = new ProductToPurchase();
-		$test51->setProduct($lightProduct);
-		$test51->setQuantity(5);
-
-		$test52 = new ProductToPurchase();
-		$test52->setProduct($appleProduct);
-		$test52->setQuantity(8.0);
-
-		$purchases[] = array(5 * self::PRODUCT_LIGHT_PRICE + 8.0 * self::PRODUCT_APPLE_DISCOUNT_PRICE, array($test51, $test52));
-
-
-		$test6 = new ProductToPurchase();
-		$test6->setProduct($starshipProduct);
-		$test6->setQuantity(6);
-
-		$purchases[] = array(4 * self::PRODUCT_STARSHIP_PRICE, array($test6));
-
-		return $purchases;
+		return array(
+			array(
+				7.0 * self::PRODUCT_APPLE_DISCOUNT_PRICE,
+				array(
+					new ProductToPurchase($appleProduct, 7.0),
+				),
+			),
+			array(
+				5 * self::PRODUCT_LIGHT_PRICE + 8.0 * self::PRODUCT_APPLE_DISCOUNT_PRICE,
+				array(
+					new ProductToPurchase($lightProduct, 5),
+					new ProductToPurchase($appleProduct, 8.0),
+				),
+			),
+			array(
+				4 * self::PRODUCT_STARSHIP_PRICE,
+				array(
+					new ProductToPurchase($starshipProduct, 6)
+				),
+			),
+		);
 	}
 
 	/**
 	 * Returns stubbed discount object.
 	 *
-	 * @param array $priceType
+	 * @param int $priceType
 	 *
 	 * @return NonCumulativeQuantityDiscount
 	 */
@@ -189,7 +177,7 @@ class CashierTest extends \PHPUnit_Framework_TestCase
 	/**
 	 * Returns stubbed discount object.
 	 *
-	 * @param array $priceType
+	 * @param int $priceType
 	 *
 	 * @return NoneDiscount
 	 */
@@ -235,7 +223,7 @@ class CashierTest extends \PHPUnit_Framework_TestCase
 	/**
 	 * Returns stubbed discount object.
 	 *
-	 * @param array $priceType
+	 * @param int $priceType
 	 *
 	 * @return BuyOneGetOneFreeDiscount
 	 */
@@ -285,7 +273,7 @@ class CashierTest extends \PHPUnit_Framework_TestCase
 	 *
 	 * @return Cashier
 	 */
-	private function getStubbedShoppingCart($purchases)
+	private function getStubbedShoppingCart(array $purchases)
 	{
 		$stub = $this->getMock('\Kata\Supermarket\ShoppingCart');
 		$stub->expects($this->any())

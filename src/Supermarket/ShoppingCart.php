@@ -2,6 +2,7 @@
 
 namespace Kata\Supermarket;
 
+use Kata\Supermarket\Product;
 use Kata\Supermarket\ProductToPurchase;
 
 /**
@@ -23,28 +24,26 @@ class ShoppingCart
 	 */
 	public function getShoppingCart()
 	{
-		// Reindex keys of array.
-		return array_values($this->shoppingCart);
+		return $this->shoppingCart;
 	}
 
 	/**
 	 * Returns the number of searched product in cart.
 	 *
-	 * @param ProductToPurchase $productToPurchase
+	 * @param Product $product
+	 * @param float   $quantity
 	 *
-	 * @return int|boolean
+	 * @return int|null
 	 */
-	private function getNumberOfProductToPurchaseInCart(ProductToPurchase $productToPurchase)
+	private function getNumberOfProductToPurchaseInCart(Product $product)
 	{
-		$searchedProduct = $productToPurchase->getProduct();
-
-		$numberOfProductToPurchase = false;
+		$numberOfProductToPurchase = null;
 
 		foreach ($this->shoppingCart as $number => $productToPurchaseInCart)
 		{
-			$product = $productToPurchaseInCart->getProduct();
+			$productInCart = $productToPurchaseInCart->getProduct();
 
-			if ($searchedProduct == $product)
+			if ($product == $productInCart)
 			{
 				$numberOfProductToPurchase = $number;
 				break;
@@ -57,30 +56,30 @@ class ShoppingCart
 	/**
 	 * Modify the products in cart.
 	 *
-	 * @param ProductToPurchase $productToPurchase
+	 * @param Product $product
+	 * @param float   $quantity
 	 *
 	 * @return boolean
 	 *
 	 * @throws Exception
 	 */
-	public function modify(ProductToPurchase $productToPurchase)
+	public function modify(Product $product, $quantity)
 	{
-		$number      = $this->getNumberOfProductToPurchaseInCart($productToPurchase);
-		$newQuantity = $productToPurchase->getQuantity();
+		$number = $this->getNumberOfProductToPurchaseInCart($product);
 
-		if ($number !== false)
+		if (!is_null($number))
 		{
 			$quantityInCart = $this->shoppingCart[$number]->getQuantity();
 
 			// Deletes product from cart.
-			if ($quantityInCart + $newQuantity == 0)
+			if ($quantityInCart + $quantity == 0)
 			{
 				unset($this->shoppingCart[$number]);
 			}
 			// Modifies quantity in cart.
-			elseif ($quantityInCart + $newQuantity > 0)
+			elseif ($quantityInCart + $quantity > 0)
 			{
-				$this->shoppingCart[$number]->setQuantity($quantityInCart + $newQuantity);
+				$this->shoppingCart[$number]->setQuantity($quantityInCart + $quantity);
 			}
 			// Invalid quantity.
 			else
@@ -91,9 +90,9 @@ class ShoppingCart
 		else
 		{
 			// Adds product to cart.
-			if ($newQuantity > 0)
+			if ($quantity > 0)
 			{
-				$this->shoppingCart[] = $productToPurchase;
+				$this->shoppingCart[] = new ProductToPurchase($product, $quantity);
 			}
 			// Product to purchase with invalid quantity.
 			else

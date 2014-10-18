@@ -14,13 +14,6 @@ class NoneDiscountTest extends \PHPUnit_Framework_TestCase
 	const PRODUCT_LIGHT_UNIT  = 'year';
 
 	/**
-	 * The test product.
-	 *
-	 * @var Product
-	 */
-	private $light = null;
-
-	/**
 	 * Tests normal price purchases.
 	 *
 	 * @param float             $totalPrice
@@ -37,51 +30,46 @@ class NoneDiscountTest extends \PHPUnit_Framework_TestCase
 	}
 
 	/**
-	 * Sets properties of the light product.
-	 *
-	 * @return void
-	 */
-	private function setLightProduct()
-	{
-		$lightDiscount = new NoneDiscount();
-
-		$this->light = new Product();
-		$this->light->setName(self::PRODUCT_LIGHT_NAME);
-		$this->light->setPricePerUnit(self::PRODUCT_LIGHT_PRICE);
-		$this->light->setUnit(self::PRODUCT_LIGHT_UNIT);
-		$this->light->setDiscount($lightDiscount);
-	}
-
-	/**
 	 * Creates test purchases.
 	 *
 	 * @return array
 	 */
 	public function providerNoneDiscountPurchases()
 	{
-		$this->setLightProduct();
+		$lightProduct = $this->getLightProduct();
 
-		$purchases = array();
+		return array(
+			array(
+				2 * self::PRODUCT_LIGHT_PRICE,
+				new ProductToPurchase($lightProduct, 2),
+			),
+			array(
+				0,
+				new ProductToPurchase($lightProduct, 0),
+			),
+			array(
+				10.0 * self::PRODUCT_LIGHT_PRICE,
+				new ProductToPurchase($lightProduct, 10.0),
+			),
+		);
+	}
 
-		$test1 = new ProductToPurchase();
-		$test1->setProduct($this->light);
-		$test1->setQuantity(2.0);
+	/**
+	 * Returns light product.
+	 *
+	 * @return Product
+	 */
+	private function getLightProduct()
+	{
+		$lightDiscount = new NoneDiscount();
 
-		$purchases[] = array(30, $test1);
+		$lightProduct = new Product();
+		$lightProduct->setName(self::PRODUCT_LIGHT_NAME);
+		$lightProduct->setPricePerUnit(self::PRODUCT_LIGHT_PRICE);
+		$lightProduct->setUnit(self::PRODUCT_LIGHT_UNIT);
+		$lightProduct->setDiscount($lightDiscount);
 
-		$test2 = new ProductToPurchase();
-		$test2->setProduct($this->light);
-		$test2->setQuantity(0);
-
-		$purchases[] = array(0, $test2);
-
-		$test3 = new ProductToPurchase();
-		$test3->setProduct($this->light);
-		$test3->setQuantity(10.0);
-
-		$purchases[] = array(150, $test3);
-
-		return $purchases;
+		return $lightProduct;
 	}
 
 }

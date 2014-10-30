@@ -230,6 +230,23 @@ class ProductDaoTest extends \PHPUnit_Framework_TestCase
 	}
 
 	/**
+	 * Tests that the empty is not integer.
+	 *
+     * @expectedException Exception
+	 */
+	public function testDeleteNoIntegerIdException()
+	{
+		$product       = new Product();
+		$product->id   = 'asdasd';
+		$product->ean  = '0002';
+		$product->name = 'BMW';
+
+		$productDao = new ProductDao($this->pdo);
+
+		$productDao->delete($product);
+	}
+
+	/**
 	 * Tests deleting.
 	 *
 	 * @return void

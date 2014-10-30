@@ -186,9 +186,13 @@ class ProductDao
 		{
 			throw new \Exception(__METHOD__ . " - The id is required!");
 		}
+		if (!is_int($product->id))
+		{
+			throw new \Exception(__METHOD__ . " - The id is not integer!");
+		}
 
 		$sth = $this->pdo->prepare("DELETE FROM `product` WHERE `id` = :id");
-		$sth->bindValue(':id', $product->id);
+		$sth->bindValue(':id', $product->id, SQLITE3_INTEGER);
 
 		$result = $sth->execute();
 		if ($result !== false)

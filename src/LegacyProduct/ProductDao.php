@@ -145,27 +145,30 @@ class ProductDao
 			throw new \Exception(__METHOD__ . " - The name is required!");
 		}
 
-		if ($this->checkUnique($product->ean))
+		$oldProduct = $this->getById($product->id);
+		if ($oldProduct->ean != $product->ean && !$this->checkUnique($product->ean))
 		{
-			$sth = $this->pdo->prepare("
-				UPDATE
-					`product`
-				SET
-					`ean` = :ean,
-					`name` = :name
-				WHERE
-					`id` = :id"
-			);
+			throw new \Exception(__METHOD__ . " - The EAN is not unique!");
+		}
 
-			$sth->bindValue(':ean', $product->ean);
-			$sth->bindValue(':name', $product->name);
-			$sth->bindValue(':id', $product->id, SQLITE3_INTEGER);
+		$sth = $this->pdo->prepare("
+			UPDATE
+				`product`
+			SET
+				`ean` = :ean,
+				`name` = :name
+			WHERE
+				`id` = :id"
+		);
 
-			$result = $sth->execute();
-			if ($result !== false)
-			{
-				$isModified = true;
-			}
+		$sth->bindValue(':ean', $product->ean);
+		$sth->bindValue(':name', $product->name);
+		$sth->bindValue(':id', $product->id, SQLITE3_INTEGER);
+
+		$result = $sth->execute();
+		if ($result !== false)
+		{
+			$isModified = true;
 		}
 
 		return $isModified;
@@ -218,14 +221,11 @@ class ProductDao
 		$sth->bindValue(':ean', $ean);
 		$result = $sth->execute();
 
-		if ($result !== false)
-		{
-			if (
-				($countRow = $result->fetchArray(SQLITE3_ASSOC)) !== false
-				&& $countRow['cnt'] > 0
-			) {
-				$isUnique = false;
-			}
+		if (
+			($countRow = $result->fetchArray(SQLITE3_ASSOC)) !== false
+			&& $countRow['cnt'] > 0
+		) {
+			$isUnique = false;
 		}
 
 		return $isUnique;

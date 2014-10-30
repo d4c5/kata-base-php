@@ -184,6 +184,35 @@ class ProductDaoTest extends \PHPUnit_Framework_TestCase
 	}
 
 	/**
+	 * Tests that the EAN is not unique.
+	 *
+     * @expectedException Exception
+	 */
+	public function testModifyNotUniqueEanException()
+	{
+		$sth = $this->pdo->prepare("INSERT INTO `product` (`id`, `ean`, `name`) VALUES(:id, :ean, :name)");
+		$sth->bindValue(':id', 1, SQLITE3_INTEGER);
+		$sth->bindValue(':ean', '0001');
+		$sth->bindValue(':name', 'Audi');
+		$sth->execute();
+
+		$sth = $this->pdo->prepare("INSERT INTO `product` (`id`, `ean`, `name`) VALUES(:id, :ean, :name)");
+		$sth->bindValue(':id', 2, SQLITE3_INTEGER);
+		$sth->bindValue(':ean', '0002');
+		$sth->bindValue(':name', 'Honda');
+		$sth->execute();
+
+		$product       = new Product();
+		$product->id   = 2;
+		$product->ean  = '0001';
+		$product->name = 'Honda';
+
+		$productDao = new ProductDao($this->pdo);
+
+		$productDao->modify($product);
+	}
+
+	/**
 	 * Tests mod.
 	 *
 	 * @return void
@@ -198,6 +227,7 @@ class ProductDaoTest extends \PHPUnit_Framework_TestCase
 
 		$productDao = new ProductDao($this->pdo);
 
+		// Modifies EAN and name.
 		$product       = new Product();
 		$product->id   = 1;
 		$product->ean  = '0002';
@@ -211,6 +241,21 @@ class ProductDaoTest extends \PHPUnit_Framework_TestCase
 		$this->assertEquals(1, $row['id']);
 		$this->assertEquals('0002', $row['ean']);
 		$this->assertEquals('BMW', $row['name']);
+
+		// Modifies only name
+		$productWithNewName       = new Product();
+		$productWithNewName->id   = 1;
+		$productWithNewName->ean  = '0002';
+		$productWithNewName->name = 'Skoda';
+
+		$this->assertTrue($productDao->modify($productWithNewName));
+
+		$resultWithNewName = $this->pdo->query("SELECT * FROM `product` WHERE `id` = 1");
+		$rowWithNewName    = $resultWithNewName->fetchArray(SQLITE3_ASSOC);
+
+		$this->assertEquals(1, $rowWithNewName['id']);
+		$this->assertEquals('0002', $rowWithNewName['ean']);
+		$this->assertEquals('Skoda', $rowWithNewName['name']);
 	}
 
 	/**

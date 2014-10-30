@@ -175,6 +175,7 @@ class ProductDao
      * Delete product from database
      *
      * @param Product $product
+	 *
      * @return bool
      */
     public function delete(Product $product)
@@ -201,7 +202,8 @@ class ProductDao
     /**
      * Check if the product will be unique by EAN
      *
-     * @param $ean
+     * @param string $ean
+	 *
      * @return bool
      */
     private function checkUnique($ean)

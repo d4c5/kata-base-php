@@ -11,6 +11,7 @@ use Kata\Velocity\VelocityChecker;
  *  - Exceptions			[ok]
  *  - Getters				[ok]
  *  - Methods				[ok]
+ *  - counterDao -> mock
  */
 class CounterTest extends \PHPUnit_Framework_TestCase
 {
@@ -28,13 +29,6 @@ class CounterTest extends \PHPUnit_Framework_TestCase
 	const TEST_INVALID_LIMIT = 'asd-asd';
 
 	/**
-	 * Database connection
-	 *
-	 * @var SQLite3
-	 */
-	private $dbConnection = null;
-
-	/**
 	 * Counter DAO.
 	 *
 	 * @var CounterDao
@@ -48,8 +42,8 @@ class CounterTest extends \PHPUnit_Framework_TestCase
 	 */
 	public function setUp()
 	{
-		$this->dbConnection = new \SQLite3('test/Velocity/velocityCheckerTest.db');
-		$this->counterDao   = new CounterDao($this->dbConnection);
+		$dbConnection     = new \SQLite3('test/Velocity/velocityCheckerTest.db');
+		$this->counterDao = new CounterDao($dbConnection);
 
 		$this->counterDao->createTable();
 	}
@@ -62,7 +56,7 @@ class CounterTest extends \PHPUnit_Framework_TestCase
      */
     public function testEmptyTypeException()
     {
-		new Counter($this->dbConnection, self::TEST_EMPTY_TYPE, self::TEST_IP_ADDRESS, VelocityChecker::MAX_FAILED_LOGIN_ATTEMPTS_FROM_ONE_IP);
+		new Counter($this->counterDao, self::TEST_EMPTY_TYPE, self::TEST_IP_ADDRESS, VelocityChecker::MAX_FAILED_LOGIN_ATTEMPTS_FROM_ONE_IP);
     }
 
 	/**
@@ -73,7 +67,7 @@ class CounterTest extends \PHPUnit_Framework_TestCase
      */
     public function testInvalidTypeException()
     {
-		new Counter($this->dbConnection, self::TEST_INVALID_TYPE, self::TEST_IP_ADDRESS, VelocityChecker::MAX_FAILED_LOGIN_ATTEMPTS_FROM_ONE_IP);
+		new Counter($this->counterDao, self::TEST_INVALID_TYPE, self::TEST_IP_ADDRESS, VelocityChecker::MAX_FAILED_LOGIN_ATTEMPTS_FROM_ONE_IP);
     }
 
 	/**
@@ -84,7 +78,7 @@ class CounterTest extends \PHPUnit_Framework_TestCase
      */
     public function testEmptyMeasureException()
     {
-		new Counter($this->dbConnection, Counter::TYPE_IP, self::TEST_EMPTY_MEASURE, VelocityChecker::MAX_FAILED_LOGIN_ATTEMPTS_FROM_ONE_IP);
+		new Counter($this->counterDao, Counter::TYPE_IP, self::TEST_EMPTY_MEASURE, VelocityChecker::MAX_FAILED_LOGIN_ATTEMPTS_FROM_ONE_IP);
     }
 
 	/**
@@ -92,20 +86,20 @@ class CounterTest extends \PHPUnit_Framework_TestCase
 	 */
 	public function testGetCounter()
 	{
-		$counterWithoutEntry = new Counter($this->dbConnection, Counter::TYPE_IP, self::TEST_IP_ADDRESS);
+		$counterWithoutEntry = new Counter($this->counterDao, Counter::TYPE_IP, self::TEST_IP_ADDRESS);
 
 		$this->assertEquals(0, $counterWithoutEntry->getCounter());
 
 		$this->counterDao->createLogEntry(Counter::TYPE_IP, self::TEST_IP_ADDRESS, 1, time() - (CounterDao::CUMULATIVE_TIME * 2));
 		$this->counterDao->createLogEntry(Counter::TYPE_IP, self::TEST_IP_ADDRESS, 2);
 
-		$counterWithTwoEntries = new Counter($this->dbConnection, Counter::TYPE_IP, self::TEST_IP_ADDRESS);
+		$counterWithTwoEntries = new Counter($this->counterDao, Counter::TYPE_IP, self::TEST_IP_ADDRESS);
 		$this->assertEquals(3, $counterWithTwoEntries->getCounter());
 
 		$this->counterDao->insertLogEntry(Counter::TYPE_IP, self::TEST_IP_ADDRESS, 1, time() - (CounterDao::COUNTER_TTL * 2));
 		$this->counterDao->createLogEntry(Counter::TYPE_IP, self::TEST_IP_ADDRESS, 2);
 
-		$counterWithOldEntry = new Counter($this->dbConnection, Counter::TYPE_IP, self::TEST_IP_ADDRESS);
+		$counterWithOldEntry = new Counter($this->counterDao, Counter::TYPE_IP, self::TEST_IP_ADDRESS);
 		$this->assertEquals(5, $counterWithOldEntry->getCounter());
 	}
 
@@ -114,7 +108,7 @@ class CounterTest extends \PHPUnit_Framework_TestCase
 	 */
 	public function testSetCounter()
 	{
-		$counter = new Counter($this->dbConnection, Counter::TYPE_IP, self::TEST_IP_ADDRESS);
+		$counter = new Counter($this->counterDao, Counter::TYPE_IP, self::TEST_IP_ADDRESS);
 
 		$counter->setCounter(VelocityChecker::MAX_FAILED_LOGIN_ATTEMPTS_FROM_ONE_IP);
 
@@ -126,7 +120,7 @@ class CounterTest extends \PHPUnit_Framework_TestCase
 	 */
 	public function testReset()
 	{
-		$counter = new Counter($this->dbConnection, Counter::TYPE_IP, self::TEST_IP_ADDRESS);
+		$counter = new Counter($this->counterDao, Counter::TYPE_IP, self::TEST_IP_ADDRESS);
 
 		$this->counterDao->createLogEntry(Counter::TYPE_IP, self::TEST_IP_ADDRESS, 2);
 

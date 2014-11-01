@@ -44,16 +44,16 @@ class Counter
 	/**
 	 * Sets the value.
 	 *
-	 * @param SQLite3 $dbConnection   SQLite database connection.
-	 * @param string  $type           The type of the counter.
-	 * @param string  $measure        IP address, IP range, country or username.
-	 * @param int     $limit          The upper limit of counter.
+	 * @param CounterDao $counterDao   SQLite database connection.
+	 * @param string     $type         The type of the counter.
+	 * @param string     $measure      IP address, IP range, country or username.
+	 * @param int        $limit        The upper limit of counter.
 	 *
 	 * @return void
 	 *
 	 * @throws CounterException
 	 */
-	final public function __construct(\SQLite3 $dbConnection, $type, $measure)
+	final public function __construct(CounterDao $counterDao, $type, $measure)
 	{
 		if (empty($type))
 		{
@@ -71,7 +71,7 @@ class Counter
 		$this->type    = $type;
 		$this->measure = $measure;
 
-		$this->counterDao = new CounterDao($dbConnection);
+		$this->counterDao = $counterDao;
 	}
 
 	/**

@@ -19,6 +19,7 @@ use Kata\Velocity\CounterDao;
  *  - failed login attempts reaches the IP country limit											[ok]
  *  - failed login attempts = IP limit when the IP country and registration country are different	[ok]
  *  - failed login attempts = no IP limit when the IP country and registration country are equal	[no need]
+ *  - counter mock
  */
 class VelocityCheckerTest extends \PHPUnit_Framework_TestCase
 {
@@ -79,10 +80,10 @@ class VelocityCheckerTest extends \PHPUnit_Framework_TestCase
 		$this->user         = new User(self::TEST_USERNAME, self::TEST_REG_COUNTRY);
 		$this->ip           = new Ip(self::TEST_IP_ADDRESS, self::TEST_IP_RANGE, self::TEST_IP_COUNTRY);
 
-		$this->ipCounter        = new Counter($this->dbConnection, Counter::TYPE_IP, self::TEST_IP_ADDRESS);
-		$this->ipRangeCounter   = new Counter($this->dbConnection, Counter::TYPE_IP_RANGE, self::TEST_IP_RANGE);
-		$this->ipCountryCounter = new Counter($this->dbConnection, Counter::TYPE_IP_COUNTRY, self::TEST_IP_COUNTRY);
-		$this->usernameCounter  = new Counter($this->dbConnection, Counter::TYPE_USERNAME, self::TEST_USERNAME);
+		$this->ipCounter        = new Counter($this->counterDao, Counter::TYPE_IP, self::TEST_IP_ADDRESS);
+		$this->ipRangeCounter   = new Counter($this->counterDao, Counter::TYPE_IP_RANGE, self::TEST_IP_RANGE);
+		$this->ipCountryCounter = new Counter($this->counterDao, Counter::TYPE_IP_COUNTRY, self::TEST_IP_COUNTRY);
+		$this->usernameCounter  = new Counter($this->counterDao, Counter::TYPE_USERNAME, self::TEST_USERNAME);
 
 		$this->counterDao->createTable();
 	}

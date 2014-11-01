@@ -28,13 +28,6 @@ class Counter
 	protected $measure = null;
 
 	/**
-	 * The upper limit.
-	 *
-	 * @var int
-	 */
-	protected $limit   = null;
-
-	/**
 	 * Counter.
 	 *
 	 * @var int
@@ -60,7 +53,7 @@ class Counter
 	 *
 	 * @throws CounterException
 	 */
-	final public function __construct(\SQLite3 $dbConnection, $type, $measure, $limit)
+	final public function __construct(\SQLite3 $dbConnection, $type, $measure)
 	{
 		if (empty($type))
 		{
@@ -74,22 +67,11 @@ class Counter
 		{
 			throw new CounterException(CounterException::EMPTY_MEASURE);
 		}
-		if (empty($limit))
-		{
-			throw new CounterException(CounterException::EMPTY_LIMIT);
-		}
-		if (is_numeric($limit) !== true)
-		{
-			throw new CounterException(CounterException::INVALID_LIMIT);
-		}
 
 		$this->type    = $type;
 		$this->measure = $measure;
-		$this->limit   = $limit;
 
 		$this->counterDao = new CounterDao($dbConnection);
-
-		$this->init();
 	}
 
 	/**
@@ -99,30 +81,22 @@ class Counter
 	 */
 	public function getCounter()
 	{
-		return $this->counter;
+		return $this->counterDao->getCounter($this->type, $this->measure);
 	}
 
 	/**
-	 * Returns the upper limit.
+	 * Sets the counter.
 	 *
-	 * @return int
-	 */
-	public function getLimit()
-	{
-		return $this->limit;
-	}
-
-	/**
-	 * Sets the counter to limit.
+	 * @param int $counter
 	 *
 	 * @return void
 	 */
-	public function setCounterToUpperLimit()
+	public function setCounter($counter)
 	{
 		$this->counterDao->deleteLogEntry($this->type, $this->measure);
-		$this->counterDao->insertLogEntry($this->type, $this->measure, $this->limit);
+		$this->counterDao->insertLogEntry($this->type, $this->measure, $counter);
 
-		$this->counter = $this->limit;
+		$this->counter = $counter;
 	}
 
 	/**
@@ -149,16 +123,6 @@ class Counter
 		}
 
 		return $isValid;
-	}
-
-	/**
-	 * Sets the counter.
-	 *
-	 * @return void
-	 */
-	private function init()
-	{
-		$this->counter = $this->counterDao->getCounter($this->type, $this->measure);
 	}
 
 	/**

@@ -62,6 +62,11 @@ class VelocityCheckerTest extends \PHPUnit_Framework_TestCase
 	 */
 	private $ip = null;
 
+	private $ipCounter        = null;
+	private $ipRangeCounter   = null;
+	private $ipCountryCounter = null;
+	private $usernameCounter  = null;
+
 	/**
 	 * Sets the database connection and counter DAO.
 	 *
@@ -69,10 +74,15 @@ class VelocityCheckerTest extends \PHPUnit_Framework_TestCase
 	 */
 	public function setUp()
 	{
-		$this->dbConnection = new \SQLite3('velocityCheckerTest.db');
+		$this->dbConnection = new \SQLite3('test/Velocity/velocityCheckerTest.db');
 		$this->counterDao   = new CounterDao($this->dbConnection);
 		$this->user         = new User(self::TEST_USERNAME, self::TEST_REG_COUNTRY);
 		$this->ip           = new Ip(self::TEST_IP_ADDRESS, self::TEST_IP_RANGE, self::TEST_IP_COUNTRY);
+
+		$this->ipCounter        = new Counter($this->dbConnection, Counter::TYPE_IP, self::TEST_IP_ADDRESS);
+		$this->ipRangeCounter   = new Counter($this->dbConnection, Counter::TYPE_IP_RANGE, self::TEST_IP_RANGE);
+		$this->ipCountryCounter = new Counter($this->dbConnection, Counter::TYPE_IP_COUNTRY, self::TEST_IP_COUNTRY);
+		$this->usernameCounter  = new Counter($this->dbConnection, Counter::TYPE_USERNAME, self::TEST_USERNAME);
 
 		$this->counterDao->createTable();
 	}
@@ -83,7 +93,7 @@ class VelocityCheckerTest extends \PHPUnit_Framework_TestCase
 	public function testSuccessfulLoginCaptcha()
 	{
 		$loginLog        = new LoginLog($this->ip, $this->user, self::TEST_LOGIN_RESULT_SUCCESS);
-		$velocityChecker = new VelocityChecker($loginLog, $this->dbConnection);
+		$velocityChecker = new VelocityChecker($loginLog, $this->ipCounter, $this->ipRangeCounter, $this->ipCountryCounter, $this->usernameCounter);
 
 		$this->assertFalse($velocityChecker->isCaptchaActive());
 	}
@@ -94,7 +104,7 @@ class VelocityCheckerTest extends \PHPUnit_Framework_TestCase
 	public function testSuccessfulLoginCounters()
 	{
 		$loginLog        = new LoginLog($this->ip, $this->user, self::TEST_LOGIN_RESULT_SUCCESS);
-		$velocityChecker = new VelocityChecker($loginLog, $this->dbConnection);
+		$velocityChecker = new VelocityChecker($loginLog, $this->ipCounter, $this->ipRangeCounter, $this->ipCountryCounter, $this->usernameCounter);
 
 		$this->counterDao->createLogEntry(Counter::TYPE_IP, self::TEST_IP_ADDRESS, 1);
 		$this->counterDao->createLogEntry(Counter::TYPE_USERNAME, self::TEST_USERNAME, 1);
@@ -116,13 +126,13 @@ class VelocityCheckerTest extends \PHPUnit_Framework_TestCase
 
 		$this->counterDao->createLogEntry(Counter::TYPE_IP, self::TEST_IP_ADDRESS, 2);
 
-		$velocityCheckerCaptchaInactive = new VelocityChecker($loginLog, $this->dbConnection);
+		$velocityCheckerCaptchaInactive  = new VelocityChecker($loginLog, $this->ipCounter, $this->ipRangeCounter, $this->ipCountryCounter, $this->usernameCounter);
 
 		$this->assertFalse($velocityCheckerCaptchaInactive->isCaptchaActive());
 
 		$this->counterDao->createLogEntry(Counter::TYPE_IP, self::TEST_IP_ADDRESS, 2);
 
-		$velocityCheckerCaptchaActive = new VelocityChecker($loginLog, $this->dbConnection);
+		$velocityCheckerCaptchaActive  = new VelocityChecker($loginLog, $this->ipCounter, $this->ipRangeCounter, $this->ipCountryCounter, $this->usernameCounter);
 
 		$this->assertTrue($velocityCheckerCaptchaActive->isCaptchaActive());
 	}
@@ -136,13 +146,13 @@ class VelocityCheckerTest extends \PHPUnit_Framework_TestCase
 
 		$this->counterDao->createLogEntry(Counter::TYPE_IP_RANGE, self::TEST_IP_RANGE, 1);
 
-		$velocityCheckerCaptchaInactive = new VelocityChecker($loginLog, $this->dbConnection);
+		$velocityCheckerCaptchaInactive = new VelocityChecker($loginLog, $this->ipCounter, $this->ipRangeCounter, $this->ipCountryCounter, $this->usernameCounter);
 
 		$this->assertFalse($velocityCheckerCaptchaInactive->isCaptchaActive());
 
 		$this->counterDao->createLogEntry(Counter::TYPE_IP_RANGE, self::TEST_IP_RANGE, 500);
 
-		$velocityCheckerCaptchaActive = new VelocityChecker($loginLog, $this->dbConnection);
+		$velocityCheckerCaptchaActive = new VelocityChecker($loginLog, $this->ipCounter, $this->ipRangeCounter, $this->ipCountryCounter, $this->usernameCounter);
 
 		$this->assertTrue($velocityCheckerCaptchaActive->isCaptchaActive());
 	}
@@ -156,13 +166,13 @@ class VelocityCheckerTest extends \PHPUnit_Framework_TestCase
 
 		$this->counterDao->createLogEntry(Counter::TYPE_IP_COUNTRY, self::TEST_IP_COUNTRY, 1);
 
-		$velocityCheckerCaptchaInactive = new VelocityChecker($loginLog, $this->dbConnection);
+		$velocityCheckerCaptchaInactive = new VelocityChecker($loginLog, $this->ipCounter, $this->ipRangeCounter, $this->ipCountryCounter, $this->usernameCounter);
 
 		$this->assertFalse($velocityCheckerCaptchaInactive->isCaptchaActive());
 
 		$this->counterDao->createLogEntry(Counter::TYPE_IP_COUNTRY, self::TEST_IP_COUNTRY, 1000);
 
-		$velocityCheckerCaptchaActive = new VelocityChecker($loginLog, $this->dbConnection);
+		$velocityCheckerCaptchaActive = new VelocityChecker($loginLog, $this->ipCounter, $this->ipRangeCounter, $this->ipCountryCounter, $this->usernameCounter);
 
 		$this->assertTrue($velocityCheckerCaptchaActive->isCaptchaActive());
 	}
@@ -176,13 +186,13 @@ class VelocityCheckerTest extends \PHPUnit_Framework_TestCase
 
 		$this->counterDao->createLogEntry(Counter::TYPE_USERNAME, self::TEST_USERNAME, 1);
 
-		$velocityCheckerCaptchaInactive = new VelocityChecker($loginLog, $this->dbConnection);
+		$velocityCheckerCaptchaInactive = new VelocityChecker($loginLog, $this->ipCounter, $this->ipRangeCounter, $this->ipCountryCounter, $this->usernameCounter);
 
 		$this->assertFalse($velocityCheckerCaptchaInactive->isCaptchaActive());
 
 		$this->counterDao->createLogEntry(Counter::TYPE_USERNAME, self::TEST_USERNAME, 3);
 
-		$velocityCheckerCaptchaActive = new VelocityChecker($loginLog, $this->dbConnection);
+		$velocityCheckerCaptchaActive = new VelocityChecker($loginLog, $this->ipCounter, $this->ipRangeCounter, $this->ipCountryCounter, $this->usernameCounter);
 
 		$this->assertTrue($velocityCheckerCaptchaActive->isCaptchaActive());
 	}
@@ -195,13 +205,13 @@ class VelocityCheckerTest extends \PHPUnit_Framework_TestCase
 		$user     = new User(self::TEST_USERNAME, self::TEST_FOREIGN_REG_COUNTRY);
 		$loginLog = new LoginLog($this->ip, $user, self::TEST_LOGIN_RESULT_FAILED);
 
-		$velocityCheckerCaptchaInactive = new VelocityChecker($loginLog, $this->dbConnection);
+		$velocityCheckerCaptchaInactive = new VelocityChecker($loginLog, $this->ipCounter, $this->ipRangeCounter, $this->ipCountryCounter, $this->usernameCounter);
 
 		$this->assertFalse($velocityCheckerCaptchaInactive->isCaptchaActive());
 
 		$this->counterDao->createLogEntry(Counter::TYPE_IP, self::TEST_IP_ADDRESS, 1);
 
-		$velocityCheckerCaptchaActive = new VelocityChecker($loginLog, $this->dbConnection);
+		$velocityCheckerCaptchaActive = new VelocityChecker($loginLog, $this->ipCounter, $this->ipRangeCounter, $this->ipCountryCounter, $this->usernameCounter);
 
 		$this->assertTrue($velocityCheckerCaptchaActive->isCaptchaActive());
 	}

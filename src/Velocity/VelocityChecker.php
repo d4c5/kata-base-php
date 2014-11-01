@@ -93,22 +93,26 @@ class VelocityChecker
 	 * Sets login log, user, ip objects and counters.
 	 *
 	 * @param LoginLog   $loginLog
-	 * @param SQLite3    $dbConnection
+	 * @param Counter    $ipCounter
+	 * @param Counter    $ipRangeCounter
+	 * @param Counter    $ipCountryCounter
+	 * @param Counter    $usernameCounter
 	 *
 	 * @return void
 	 */
-	public function __construct(LoginLog $loginLog, \SQLite3 $dbConnection)
-	{
+	public function __construct(
+		LoginLog $loginLog, Counter $ipCounter, Counter $ipRangeCounter, Counter $ipCountryCounter,
+		Counter $usernameCounter
+	) {
 		$this->loginLog = $loginLog;
 
 		$this->user = $this->loginLog->getUser();
 		$this->ip   = $this->loginLog->getIp();
 
-		// TODO: DI?
-		$this->ipCounter        = new Counter($dbConnection, Counter::TYPE_IP, $this->ip->getIp(), self::MAX_FAILED_LOGIN_ATTEMPTS_FROM_ONE_IP);
-		$this->ipRangeCounter   = new Counter($dbConnection, Counter::TYPE_IP_RANGE, $this->ip->getRange(), self::MAX_FAILED_LOGIN_ATTEMPTS_FROM_ONE_RANGE);
-		$this->ipCountryCounter = new Counter($dbConnection, Counter::TYPE_IP_COUNTRY, $this->ip->getCountry(), self::MAX_FAILED_LOGIN_ATTEMPTS_FROM_ONE_COUNTRY);
-		$this->usernameCounter  = new Counter($dbConnection, Counter::TYPE_USERNAME, $this->user->getUsername(), self::MAX_FAILED_LOGIN_ATTEMPTS_WITH_ONE_USERNAME);
+		$this->ipCounter        = $ipCounter;
+		$this->ipRangeCounter   = $ipRangeCounter;
+		$this->ipCountryCounter = $ipCountryCounter;
+		$this->usernameCounter  = $usernameCounter;
 	}
 
 	/**
@@ -120,26 +124,26 @@ class VelocityChecker
 	 */
 	public function isCaptchaActive()
 	{
-		$captchaActive = false;
+		$isCaptchaActive = false;
 
 		if ($this->loginLog->getResult() === true)
 		{
 			$this->resetCounters();
 		}
 		elseif (
-			$this->ipCounter->getCounter() > $this->ipCounter->getLimit()
-			|| $this->usernameCounter->getCounter() > $this->usernameCounter->getLimit()
-			|| $this->ipRangeCounter->getCounter() > $this->ipRangeCounter->getLimit()
-			|| $this->ipCountryCounter->getCounter() > $this->ipCountryCounter->getLimit()
+			$this->ipCounter->getCounter() > self::MAX_FAILED_LOGIN_ATTEMPTS_FROM_ONE_IP
+			|| $this->usernameCounter->getCounter() > self::MAX_FAILED_LOGIN_ATTEMPTS_WITH_ONE_USERNAME
+			|| $this->ipRangeCounter->getCounter() > self::MAX_FAILED_LOGIN_ATTEMPTS_FROM_ONE_RANGE
+			|| $this->ipCountryCounter->getCounter() > self::MAX_FAILED_LOGIN_ATTEMPTS_FROM_ONE_COUNTRY
 		) {
-			$captchaActive = true;
+			$isCaptchaActive = true;
 		}
 		elseif ($this->user->getCountry() !== $this->ip->getCountry())
 		{
-			$this->ipCounter->setCounterToUpperLimit();
+			$this->ipCounter->setCounter(self::MAX_FAILED_LOGIN_ATTEMPTS_FROM_ONE_IP);
 		}
 
-		return $captchaActive;
+		return $isCaptchaActive;
 	}
 
 	/**

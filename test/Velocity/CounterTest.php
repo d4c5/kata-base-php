@@ -10,7 +10,7 @@ use Kata\Velocity\VelocityChecker;
  * TODO LIST:
  *  - Exceptions			[ok]
  *  - Getters				[ok]
- *  - Methods
+ *  - Methods				[ok]
  */
 class CounterTest extends \PHPUnit_Framework_TestCase
 {
@@ -48,7 +48,7 @@ class CounterTest extends \PHPUnit_Framework_TestCase
 	 */
 	public function setUp()
 	{
-		$this->dbConnection = new \SQLite3('velocityCheckerTest.db');
+		$this->dbConnection = new \SQLite3('test/Velocity/velocityCheckerTest.db');
 		$this->counterDao   = new CounterDao($this->dbConnection);
 
 		$this->counterDao->createTable();
@@ -88,67 +88,35 @@ class CounterTest extends \PHPUnit_Framework_TestCase
     }
 
 	/**
-	 * Tests that the limit is empty.
-	 *
-     * @expectedException Kata\Velocity\CounterException
-	 * @expectedExceptionCode 604
-     */
-    public function testEmptyLimitException()
-    {
-		new Counter($this->dbConnection, Counter::TYPE_IP, self::TEST_IP_ADDRESS, self::TEST_EMPTY_LIMIT);
-    }
-
-	/**
-	 * Tests that the limit is invalid.
-	 *
-     * @expectedException Kata\Velocity\CounterException
-	 * @expectedExceptionCode 605
-     */
-    public function testInvalidLimitException()
-    {
-		new Counter($this->dbConnection, Counter::TYPE_IP, self::TEST_IP_ADDRESS, self::TEST_INVALID_LIMIT);
-    }
-
-	/**
 	 * Tests the counter.
 	 */
 	public function testGetCounter()
 	{
-		$counterWithoutEntry = new Counter($this->dbConnection, Counter::TYPE_IP, self::TEST_IP_ADDRESS, VelocityChecker::MAX_FAILED_LOGIN_ATTEMPTS_FROM_ONE_IP);
+		$counterWithoutEntry = new Counter($this->dbConnection, Counter::TYPE_IP, self::TEST_IP_ADDRESS);
 
 		$this->assertEquals(0, $counterWithoutEntry->getCounter());
 
 		$this->counterDao->createLogEntry(Counter::TYPE_IP, self::TEST_IP_ADDRESS, 1, time() - (CounterDao::CUMULATIVE_TIME * 2));
 		$this->counterDao->createLogEntry(Counter::TYPE_IP, self::TEST_IP_ADDRESS, 2);
 
-		$counterWithTwoEntries = new Counter($this->dbConnection, Counter::TYPE_IP, self::TEST_IP_ADDRESS, VelocityChecker::MAX_FAILED_LOGIN_ATTEMPTS_FROM_ONE_IP);
+		$counterWithTwoEntries = new Counter($this->dbConnection, Counter::TYPE_IP, self::TEST_IP_ADDRESS);
 		$this->assertEquals(3, $counterWithTwoEntries->getCounter());
 
 		$this->counterDao->insertLogEntry(Counter::TYPE_IP, self::TEST_IP_ADDRESS, 1, time() - (CounterDao::COUNTER_TTL * 2));
 		$this->counterDao->createLogEntry(Counter::TYPE_IP, self::TEST_IP_ADDRESS, 2);
 
-		$counterWithOldEntry = new Counter($this->dbConnection, Counter::TYPE_IP, self::TEST_IP_ADDRESS, VelocityChecker::MAX_FAILED_LOGIN_ATTEMPTS_FROM_ONE_IP);
+		$counterWithOldEntry = new Counter($this->dbConnection, Counter::TYPE_IP, self::TEST_IP_ADDRESS);
 		$this->assertEquals(5, $counterWithOldEntry->getCounter());
-	}
-
-	/**
-	 * Tests the limit.
-	 */
-	public function testGetLimit()
-	{
-		$counter = new Counter($this->dbConnection, Counter::TYPE_IP, self::TEST_IP_ADDRESS, VelocityChecker::MAX_FAILED_LOGIN_ATTEMPTS_FROM_ONE_IP);
-
-		$this->assertEquals(VelocityChecker::MAX_FAILED_LOGIN_ATTEMPTS_FROM_ONE_IP, $counter->getLimit());
 	}
 
 	/**
 	 * Tests that the counter sets to the upper limit.
 	 */
-	public function testSetCounterToUpperLimit()
+	public function testSetCounter()
 	{
-		$counter = new Counter($this->dbConnection, Counter::TYPE_IP, self::TEST_IP_ADDRESS, VelocityChecker::MAX_FAILED_LOGIN_ATTEMPTS_FROM_ONE_IP);
+		$counter = new Counter($this->dbConnection, Counter::TYPE_IP, self::TEST_IP_ADDRESS);
 
-		$counter->setCounterToUpperLimit();
+		$counter->setCounter(VelocityChecker::MAX_FAILED_LOGIN_ATTEMPTS_FROM_ONE_IP);
 
 		$this->assertEquals(VelocityChecker::MAX_FAILED_LOGIN_ATTEMPTS_FROM_ONE_IP, $counter->getCounter());
 	}
@@ -158,7 +126,7 @@ class CounterTest extends \PHPUnit_Framework_TestCase
 	 */
 	public function testReset()
 	{
-		$counter = new Counter($this->dbConnection, Counter::TYPE_IP, self::TEST_IP_ADDRESS, VelocityChecker::MAX_FAILED_LOGIN_ATTEMPTS_FROM_ONE_IP);
+		$counter = new Counter($this->dbConnection, Counter::TYPE_IP, self::TEST_IP_ADDRESS);
 
 		$this->counterDao->createLogEntry(Counter::TYPE_IP, self::TEST_IP_ADDRESS, 2);
 

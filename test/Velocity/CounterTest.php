@@ -15,6 +15,8 @@ use Kata\Velocity\VelocityChecker;
  */
 class CounterTest extends \PHPUnit_Framework_TestCase
 {
+	const TEST_DATABASE_PATH = 'test/Velocity/velocityCheckerTest.db';
+
 	const TEST_IP_ADDRESS = '192.168.4.1';
 	const TEST_IP_RANGE   = 'OfficeLAN';
 	const TEST_IP_COUNTRY = 'LU';
@@ -36,7 +38,7 @@ class CounterTest extends \PHPUnit_Framework_TestCase
      */
     public function testEmptyTypeException()
     {
-		$dbConnection = new \SQLite3('test/Velocity/velocityCheckerTest.db');
+		$dbConnection = new \SQLite3(self::TEST_DATABASE_PATH);
 		$counterDao   = $this->getMock('\Kata\Velocity\CounterDao', array(), array($dbConnection));
 
 		new Counter($counterDao, self::TEST_EMPTY_TYPE, self::TEST_IP_ADDRESS, VelocityChecker::MAX_FAILED_LOGIN_ATTEMPTS_FROM_ONE_IP);
@@ -50,7 +52,7 @@ class CounterTest extends \PHPUnit_Framework_TestCase
      */
     public function testInvalidTypeException()
     {
-		$dbConnection = new \SQLite3('test/Velocity/velocityCheckerTest.db');
+		$dbConnection = new \SQLite3(self::TEST_DATABASE_PATH);
 		$counterDao   = $this->getMock('\Kata\Velocity\CounterDao', array(), array($dbConnection));
 
 		new Counter($counterDao, self::TEST_INVALID_TYPE, self::TEST_IP_ADDRESS, VelocityChecker::MAX_FAILED_LOGIN_ATTEMPTS_FROM_ONE_IP);
@@ -64,7 +66,7 @@ class CounterTest extends \PHPUnit_Framework_TestCase
      */
     public function testEmptyMeasureException()
     {
-		$dbConnection = new \SQLite3('test/Velocity/velocityCheckerTest.db');
+		$dbConnection = new \SQLite3(self::TEST_DATABASE_PATH);
 		$counterDao   = $this->getMock('\Kata\Velocity\CounterDao', array(), array($dbConnection));
 
 		new Counter($counterDao, Counter::TYPE_IP, self::TEST_EMPTY_MEASURE, VelocityChecker::MAX_FAILED_LOGIN_ATTEMPTS_FROM_ONE_IP);
@@ -75,7 +77,7 @@ class CounterTest extends \PHPUnit_Framework_TestCase
 	 */
 	public function testGetCounter()
 	{
-		$dbConnection = new \SQLite3('test/Velocity/velocityCheckerTest.db');
+		$dbConnection = new \SQLite3(self::TEST_DATABASE_PATH);
 
 		$counterDao = $this->getMock('\Kata\Velocity\CounterDao', array('getCounter'), array($dbConnection));
 		$counterDao->expects($this->any())
@@ -97,7 +99,7 @@ class CounterTest extends \PHPUnit_Framework_TestCase
 	 */
 	public function testSetCounter()
 	{
-		$dbConnection = new \SQLite3('test/Velocity/velocityCheckerTest.db');
+		$dbConnection = new \SQLite3(self::TEST_DATABASE_PATH);
 
 		$counterDao = $this->getMock(
 				'\Kata\Velocity\CounterDao',
@@ -126,7 +128,7 @@ class CounterTest extends \PHPUnit_Framework_TestCase
 	 */
 	public function testReset()
 	{
-		$dbConnection = new \SQLite3('test/Velocity/velocityCheckerTest.db');
+		$dbConnection = new \SQLite3(self::TEST_DATABASE_PATH);
 
 		$counterDao = $this->getMock(
 				'\Kata\Velocity\CounterDao',

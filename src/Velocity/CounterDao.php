@@ -24,8 +24,6 @@ class CounterDao
 	public function __construct(\SQLite3 $dbConnection)
 	{
 		$this->dbConnection = $dbConnection;
-
-		// $this->createTable();
 	}
 
 	/**
@@ -231,7 +229,7 @@ class CounterDao
 	 * @param string $type
 	 * @param string $measure
 	 *
-	 * return SQLite3Result
+	 * return void
 	 */
 	public function deleteLogEntry($type, $measure)
 	{

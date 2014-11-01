@@ -18,7 +18,7 @@ class Counter
 	 *
 	 * @var string
 	 */
-	protected $type    = '';
+	protected $type = '';
 
 	/**
 	 * The measure.
@@ -26,13 +26,6 @@ class Counter
 	 * @var string
 	 */
 	protected $measure = null;
-
-	/**
-	 * Counter.
-	 *
-	 * @var int
-	 */
-	protected $counter = 0;
 
 	/**
 	 * Counter DAO.
@@ -95,8 +88,6 @@ class Counter
 	{
 		$this->counterDao->deleteLogEntry($this->type, $this->measure);
 		$this->counterDao->insertLogEntry($this->type, $this->measure, $counter);
-
-		$this->counter = $counter;
 	}
 
 	/**
@@ -132,8 +123,6 @@ class Counter
 	 */
 	public function reset()
 	{
-		$this->counter = 0;
-
 		$this->counterDao->deleteLogEntry($this->type, $this->measure);
 	}
 

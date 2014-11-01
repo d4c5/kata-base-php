@@ -29,26 +29,6 @@ class CounterTest extends \PHPUnit_Framework_TestCase
 	const TEST_INVALID_LIMIT = 'asd-asd';
 
 	/**
-	 * Counter DAO.
-	 *
-	 * @var CounterDao
-	 */
-	private $counterDao = null;
-
-	/**
-	 * Sets the database connection and counter DAO.
-	 *
-	 * @return void
-	 */
-	public function setUp()
-	{
-		$dbConnection     = new \SQLite3('test/Velocity/velocityCheckerTest.db');
-		$this->counterDao = new CounterDao($dbConnection);
-
-		$this->counterDao->createTable();
-	}
-
-	/**
 	 * Tests that the type is empty.
 	 *
      * @expectedException Kata\Velocity\CounterException
@@ -56,7 +36,10 @@ class CounterTest extends \PHPUnit_Framework_TestCase
      */
     public function testEmptyTypeException()
     {
-		new Counter($this->counterDao, self::TEST_EMPTY_TYPE, self::TEST_IP_ADDRESS, VelocityChecker::MAX_FAILED_LOGIN_ATTEMPTS_FROM_ONE_IP);
+		$dbConnection = new \SQLite3('test/Velocity/velocityCheckerTest.db');
+		$counterDao   = new CounterDao($dbConnection);
+
+		new Counter($counterDao, self::TEST_EMPTY_TYPE, self::TEST_IP_ADDRESS, VelocityChecker::MAX_FAILED_LOGIN_ATTEMPTS_FROM_ONE_IP);
     }
 
 	/**
@@ -67,7 +50,10 @@ class CounterTest extends \PHPUnit_Framework_TestCase
      */
     public function testInvalidTypeException()
     {
-		new Counter($this->counterDao, self::TEST_INVALID_TYPE, self::TEST_IP_ADDRESS, VelocityChecker::MAX_FAILED_LOGIN_ATTEMPTS_FROM_ONE_IP);
+		$dbConnection = new \SQLite3('test/Velocity/velocityCheckerTest.db');
+		$counterDao   = new CounterDao($dbConnection);
+
+		new Counter($counterDao, self::TEST_INVALID_TYPE, self::TEST_IP_ADDRESS, VelocityChecker::MAX_FAILED_LOGIN_ATTEMPTS_FROM_ONE_IP);
     }
 
 	/**
@@ -78,7 +64,10 @@ class CounterTest extends \PHPUnit_Framework_TestCase
      */
     public function testEmptyMeasureException()
     {
-		new Counter($this->counterDao, Counter::TYPE_IP, self::TEST_EMPTY_MEASURE, VelocityChecker::MAX_FAILED_LOGIN_ATTEMPTS_FROM_ONE_IP);
+		$dbConnection = new \SQLite3('test/Velocity/velocityCheckerTest.db');
+		$counterDao   = new CounterDao($dbConnection);
+
+		new Counter($counterDao, Counter::TYPE_IP, self::TEST_EMPTY_MEASURE, VelocityChecker::MAX_FAILED_LOGIN_ATTEMPTS_FROM_ONE_IP);
     }
 
 	/**
@@ -86,20 +75,20 @@ class CounterTest extends \PHPUnit_Framework_TestCase
 	 */
 	public function testGetCounter()
 	{
-		$counterWithoutEntry = new Counter($this->counterDao, Counter::TYPE_IP, self::TEST_IP_ADDRESS);
+		$dbConnection = new \SQLite3('test/Velocity/velocityCheckerTest.db');
 
+		$counterDao = $this->getMock('\Kata\Velocity\CounterDao', array('getCounter'), array($dbConnection));
+		$counterDao->expects($this->any())
+				->method('getCounter')
+				->will($this->onConsecutiveCalls(0, 3, 5));
+
+		$counterWithoutEntry   = new Counter($counterDao, Counter::TYPE_IP, self::TEST_IP_ADDRESS);
 		$this->assertEquals(0, $counterWithoutEntry->getCounter());
 
-		$this->counterDao->createLogEntry(Counter::TYPE_IP, self::TEST_IP_ADDRESS, 1, time() - (CounterDao::CUMULATIVE_TIME * 2));
-		$this->counterDao->createLogEntry(Counter::TYPE_IP, self::TEST_IP_ADDRESS, 2);
-
-		$counterWithTwoEntries = new Counter($this->counterDao, Counter::TYPE_IP, self::TEST_IP_ADDRESS);
+		$counterWithTwoEntries = new Counter($counterDao, Counter::TYPE_IP, self::TEST_IP_ADDRESS);
 		$this->assertEquals(3, $counterWithTwoEntries->getCounter());
 
-		$this->counterDao->insertLogEntry(Counter::TYPE_IP, self::TEST_IP_ADDRESS, 1, time() - (CounterDao::COUNTER_TTL * 2));
-		$this->counterDao->createLogEntry(Counter::TYPE_IP, self::TEST_IP_ADDRESS, 2);
-
-		$counterWithOldEntry = new Counter($this->counterDao, Counter::TYPE_IP, self::TEST_IP_ADDRESS);
+		$counterWithOldEntry   = new Counter($counterDao, Counter::TYPE_IP, self::TEST_IP_ADDRESS);
 		$this->assertEquals(5, $counterWithOldEntry->getCounter());
 	}
 
@@ -108,7 +97,24 @@ class CounterTest extends \PHPUnit_Framework_TestCase
 	 */
 	public function testSetCounter()
 	{
-		$counter = new Counter($this->counterDao, Counter::TYPE_IP, self::TEST_IP_ADDRESS);
+		$dbConnection = new \SQLite3('test/Velocity/velocityCheckerTest.db');
+
+		$counterDao = $this->getMock(
+				'\Kata\Velocity\CounterDao',
+				array('deleteLogEntry', 'insertLogEntry', 'getCounter'),
+				array($dbConnection)
+		);
+		$counterDao->expects($this->any())
+				->method('deleteLogEntry')
+				->will($this->returnValue(true));
+		$counterDao->expects($this->any())
+				->method('insertLogEntry')
+				->will($this->returnValue(true));
+		$counterDao->expects($this->any())
+				->method('getCounter')
+				->will($this->returnValue(VelocityChecker::MAX_FAILED_LOGIN_ATTEMPTS_FROM_ONE_IP));
+
+		$counter = new Counter($counterDao, Counter::TYPE_IP, self::TEST_IP_ADDRESS);
 
 		$counter->setCounter(VelocityChecker::MAX_FAILED_LOGIN_ATTEMPTS_FROM_ONE_IP);
 
@@ -120,9 +126,21 @@ class CounterTest extends \PHPUnit_Framework_TestCase
 	 */
 	public function testReset()
 	{
-		$counter = new Counter($this->counterDao, Counter::TYPE_IP, self::TEST_IP_ADDRESS);
+		$dbConnection = new \SQLite3('test/Velocity/velocityCheckerTest.db');
 
-		$this->counterDao->createLogEntry(Counter::TYPE_IP, self::TEST_IP_ADDRESS, 2);
+		$counterDao = $this->getMock(
+				'\Kata\Velocity\CounterDao',
+				array('deleteLogEntry', 'getCounter'),
+				array($dbConnection)
+		);
+		$counterDao->expects($this->any())
+				->method('deleteLogEntry')
+				->will($this->returnValue(true));
+		$counterDao->expects($this->any())
+				->method('getCounter')
+				->will($this->returnValue(0));
+
+		$counter = new Counter($counterDao, Counter::TYPE_IP, self::TEST_IP_ADDRESS);
 
 		$counter->reset();
 

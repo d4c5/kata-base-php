@@ -8,7 +8,7 @@ use Kata\LegacyProduct\ProductDao;
 
 class ProductDaoTest extends \PHPUnit_Framework_TestCase
 {
-	const TEST_DATABASE_FILE = 'production_test.db';
+	const TEST_DATABASE_FILE = 'LegacyProductTest.db';
 
 	/**
 	 * DB connectio object.

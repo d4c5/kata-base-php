@@ -11,7 +11,7 @@ use Kata\Velocity\VelocityChecker;
  *  - Exceptions			[ok]
  *  - Getters				[ok]
  *  - Methods				[ok]
- *  - counterDao mocking    [ok]
+ *  - counterDao mocking	[ok]
  */
 class CounterTest extends \PHPUnit_Framework_TestCase
 {

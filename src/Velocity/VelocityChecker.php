@@ -104,10 +104,10 @@ class VelocityChecker
 		LoginLog $loginLog, Counter $ipCounter, Counter $ipRangeCounter, Counter $ipCountryCounter,
 		Counter $usernameCounter
 	) {
-		$this->loginLog = $loginLog;
+		$this->loginLog         = $loginLog;
 
-		$this->user = $this->loginLog->getUser();
-		$this->ip   = $this->loginLog->getIp();
+		$this->user             = $this->loginLog->getUser();
+		$this->ip               = $this->loginLog->getIp();
 
 		$this->ipCounter        = $ipCounter;
 		$this->ipRangeCounter   = $ipRangeCounter;

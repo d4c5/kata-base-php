@@ -19,10 +19,12 @@ use Kata\Velocity\CounterDao;
  *  - failed login attempts reaches the IP country limit											[ok]
  *  - failed login attempts = IP limit when the IP country and registration country are different	[ok]
  *  - failed login attempts = no IP limit when the IP country and registration country are equal	[no need]
- *  - counter mock
+ *  - Counter mocking																				[ok]
  */
 class VelocityCheckerTest extends \PHPUnit_Framework_TestCase
 {
+	const TEST_DATABASE_PATH = 'test/Velocity/velocityCheckerTest.db';
+
 	const TEST_USERNAME    = 'test_user';
 	const TEST_REG_COUNTRY = 'LU';
 
@@ -36,185 +38,102 @@ class VelocityCheckerTest extends \PHPUnit_Framework_TestCase
 	const TEST_LOGIN_RESULT_FAILED  = false;
 
 	/**
-	 * Database connection
+	 * Tests that failed login attempts reaches the limit.
 	 *
-	 * @var SQLite3
-	 */
-	private $dbConnection = null;
-
-	/**
-	 * Counter DAO.
-	 *
-	 * @var CounterDao
-	 */
-	private $counterDao = null;
-
-	/**
-	 * User object.
-	 *
-	 * @var User
-	 */
-	private $user = null;
-
-	/**
-	 * IP object.
-	 *
-	 * @var Ip
-	 */
-	private $ip = null;
-
-	private $ipCounter        = null;
-	private $ipRangeCounter   = null;
-	private $ipCountryCounter = null;
-	private $usernameCounter  = null;
-
-	/**
-	 * Sets the database connection and counter DAO.
+	 * @param boolean $statusOfCaptcha
+	 * @param int     $numberOfIpCounter
+	 * @param int     $numberOfIpRangeCounter
+	 * @param int     $numberOfIpCountryCounter
+	 * @param int     $numberOfUsernameCounter
+	 * @param boolean $resultOfLogin
+	 * @param string  $registrationCountry
 	 *
 	 * @return void
+	 *
+	 * @dataProvider providerCountersToLimitChecking
 	 */
-	public function setUp()
-	{
-		$this->dbConnection = new \SQLite3('test/Velocity/velocityCheckerTest.db');
-		$this->counterDao   = new CounterDao($this->dbConnection);
-		$this->user         = new User(self::TEST_USERNAME, self::TEST_REG_COUNTRY);
-		$this->ip           = new Ip(self::TEST_IP_ADDRESS, self::TEST_IP_RANGE, self::TEST_IP_COUNTRY);
+	public function testCapthca(
+		$statusOfCaptcha, $numberOfIpCounter, $numberOfIpRangeCounter, $numberOfIpCountryCounter, $numberOfUsernameCounter,
+		$resultOfLogin, $registrationCountry
+	) {
+		$dbConnection = new \SQLite3(self::TEST_DATABASE_PATH);
+		$counterDao   = new CounterDao($dbConnection);
 
-		$this->ipCounter        = new Counter($this->counterDao, Counter::TYPE_IP, self::TEST_IP_ADDRESS);
-		$this->ipRangeCounter   = new Counter($this->counterDao, Counter::TYPE_IP_RANGE, self::TEST_IP_RANGE);
-		$this->ipCountryCounter = new Counter($this->counterDao, Counter::TYPE_IP_COUNTRY, self::TEST_IP_COUNTRY);
-		$this->usernameCounter  = new Counter($this->counterDao, Counter::TYPE_USERNAME, self::TEST_USERNAME);
+		$ipCounter = $this->getMock(
+			'\Kata\Velocity\Counter',
+			array('getCounter', 'reset', 'setCounter'),
+			array($counterDao, Counter::TYPE_IP, self::TEST_IP_ADDRESS)
+		);
+		$ipCounter->expects($this->any())
+				->method('getCounter')
+				->will($this->returnValue($numberOfIpCounter));
+		$ipCounter->expects($this->any())
+				->method('reset')
+				->will($this->returnValue(true));
+		$ipCounter->expects($this->any())
+				->method('setCounter')
+				->will($this->returnValue(true));
 
-		$this->counterDao->createTable();
+		$ipRangeCounter = $this->getMock(
+			'\Kata\Velocity\Counter',
+			array('getCounter'),
+			array($counterDao, Counter::TYPE_IP_RANGE, self::TEST_IP_RANGE)
+		);
+		$ipRangeCounter->expects($this->any())
+				->method('getCounter')
+				->will($this->returnValue($numberOfIpRangeCounter));
+
+		$ipCountryCounter = $this->getMock(
+			'\Kata\Velocity\Counter',
+			array('getCounter'),
+			array($counterDao, Counter::TYPE_IP_COUNTRY, self::TEST_IP_COUNTRY)
+		);
+		$ipCountryCounter->expects($this->any())
+				->method('getCounter')
+				->will($this->returnValue($numberOfIpCountryCounter));
+		$usernameCounter = $this->getMock(
+			'\Kata\Velocity\Counter',
+			array('getCounter', 'reset'),
+			array($counterDao, Counter::TYPE_USERNAME, self::TEST_USERNAME)
+		);
+		$usernameCounter->expects($this->any())
+				->method('getCounter')
+				->will($this->returnValue($numberOfUsernameCounter));
+		$usernameCounter->expects($this->any())
+				->method('reset')
+				->will($this->returnValue(true));
+
+		$user     = new User(self::TEST_USERNAME, $registrationCountry);
+		$ip       = new Ip(self::TEST_IP_ADDRESS, self::TEST_IP_RANGE, self::TEST_IP_COUNTRY);
+		$loginLog = new LoginLog($ip, $user, $resultOfLogin);
+		$velocity = new VelocityChecker($loginLog, $ipCounter, $ipRangeCounter, $ipCountryCounter, $usernameCounter);
+
+		$this->assertEquals($statusOfCaptcha, $velocity->isCaptchaActive());
 	}
 
 	/**
-	 * Successful login checks: captcha.
+	 * Returns the status of the captcha, counters, result of login and registration country.
+	 *
+	 * @return array
 	 */
-	public function testSuccessfulLoginCaptcha()
+	public function providerCountersToLimitChecking()
 	{
-		$loginLog        = new LoginLog($this->ip, $this->user, self::TEST_LOGIN_RESULT_SUCCESS);
-		$velocityChecker = new VelocityChecker($loginLog, $this->ipCounter, $this->ipRangeCounter, $this->ipCountryCounter, $this->usernameCounter);
-
-		$this->assertFalse($velocityChecker->isCaptchaActive());
-	}
-
-	/**
-	 * Successful login checks: counters.
-	 */
-	public function testSuccessfulLoginCounters()
-	{
-		$loginLog        = new LoginLog($this->ip, $this->user, self::TEST_LOGIN_RESULT_SUCCESS);
-		$velocityChecker = new VelocityChecker($loginLog, $this->ipCounter, $this->ipRangeCounter, $this->ipCountryCounter, $this->usernameCounter);
-
-		$this->counterDao->createLogEntry(Counter::TYPE_IP, self::TEST_IP_ADDRESS, 1);
-		$this->counterDao->createLogEntry(Counter::TYPE_USERNAME, self::TEST_USERNAME, 1);
-
-		$velocityChecker->isCaptchaActive();
-
-		$result = $this->dbConnection->query("SELECT COUNT(*) AS cnt FROM `counter`");
-		$row    = $result->fetchArray(SQLITE3_ASSOC);
-
-		$this->assertEquals(0, !empty($row['cnt']) ? $row['cnt'] : false);
-	}
-
-	/**
-	 * Tests that failed login attempts reaches the IP limit.
-	 */
-	public function testIpLimit()
-	{
-		$loginLog = new LoginLog($this->ip, $this->user, self::TEST_LOGIN_RESULT_FAILED);
-
-		$this->counterDao->createLogEntry(Counter::TYPE_IP, self::TEST_IP_ADDRESS, 2);
-
-		$velocityCheckerCaptchaInactive  = new VelocityChecker($loginLog, $this->ipCounter, $this->ipRangeCounter, $this->ipCountryCounter, $this->usernameCounter);
-
-		$this->assertFalse($velocityCheckerCaptchaInactive->isCaptchaActive());
-
-		$this->counterDao->createLogEntry(Counter::TYPE_IP, self::TEST_IP_ADDRESS, 2);
-
-		$velocityCheckerCaptchaActive  = new VelocityChecker($loginLog, $this->ipCounter, $this->ipRangeCounter, $this->ipCountryCounter, $this->usernameCounter);
-
-		$this->assertTrue($velocityCheckerCaptchaActive->isCaptchaActive());
-	}
-
-	/**
-	 * Tests that failed login attempts reaches the IP range limit.
-	 */
-	public function testIpRangeLimit()
-	{
-		$loginLog = new LoginLog($this->ip, $this->user, self::TEST_LOGIN_RESULT_FAILED);
-
-		$this->counterDao->createLogEntry(Counter::TYPE_IP_RANGE, self::TEST_IP_RANGE, 1);
-
-		$velocityCheckerCaptchaInactive = new VelocityChecker($loginLog, $this->ipCounter, $this->ipRangeCounter, $this->ipCountryCounter, $this->usernameCounter);
-
-		$this->assertFalse($velocityCheckerCaptchaInactive->isCaptchaActive());
-
-		$this->counterDao->createLogEntry(Counter::TYPE_IP_RANGE, self::TEST_IP_RANGE, 500);
-
-		$velocityCheckerCaptchaActive = new VelocityChecker($loginLog, $this->ipCounter, $this->ipRangeCounter, $this->ipCountryCounter, $this->usernameCounter);
-
-		$this->assertTrue($velocityCheckerCaptchaActive->isCaptchaActive());
-	}
-
-	/**
-	 * Tests that failed login attempts reaches the IP country limit.
-	 */
-	public function testIpCountryLimit()
-	{
-		$loginLog = new LoginLog($this->ip, $this->user, self::TEST_LOGIN_RESULT_FAILED);
-
-		$this->counterDao->createLogEntry(Counter::TYPE_IP_COUNTRY, self::TEST_IP_COUNTRY, 1);
-
-		$velocityCheckerCaptchaInactive = new VelocityChecker($loginLog, $this->ipCounter, $this->ipRangeCounter, $this->ipCountryCounter, $this->usernameCounter);
-
-		$this->assertFalse($velocityCheckerCaptchaInactive->isCaptchaActive());
-
-		$this->counterDao->createLogEntry(Counter::TYPE_IP_COUNTRY, self::TEST_IP_COUNTRY, 1000);
-
-		$velocityCheckerCaptchaActive = new VelocityChecker($loginLog, $this->ipCounter, $this->ipRangeCounter, $this->ipCountryCounter, $this->usernameCounter);
-
-		$this->assertTrue($velocityCheckerCaptchaActive->isCaptchaActive());
-	}
-
-	/**
-	 * Tests that failed login attempts reaches the username limit.
-	 */
-	public function testUsernameLimit()
-	{
-		$loginLog = new LoginLog($this->ip, $this->user, self::TEST_LOGIN_RESULT_FAILED);
-
-		$this->counterDao->createLogEntry(Counter::TYPE_USERNAME, self::TEST_USERNAME, 1);
-
-		$velocityCheckerCaptchaInactive = new VelocityChecker($loginLog, $this->ipCounter, $this->ipRangeCounter, $this->ipCountryCounter, $this->usernameCounter);
-
-		$this->assertFalse($velocityCheckerCaptchaInactive->isCaptchaActive());
-
-		$this->counterDao->createLogEntry(Counter::TYPE_USERNAME, self::TEST_USERNAME, 3);
-
-		$velocityCheckerCaptchaActive = new VelocityChecker($loginLog, $this->ipCounter, $this->ipRangeCounter, $this->ipCountryCounter, $this->usernameCounter);
-
-		$this->assertTrue($velocityCheckerCaptchaActive->isCaptchaActive());
-	}
-
-	/**
-	 * Tests that failed login attempts = IP limit when the IP country and registration country are different.
-	 */
-	public function testFailedLoginWithDifferentRegistrationCountry()
-	{
-		$user     = new User(self::TEST_USERNAME, self::TEST_FOREIGN_REG_COUNTRY);
-		$loginLog = new LoginLog($this->ip, $user, self::TEST_LOGIN_RESULT_FAILED);
-
-		$velocityCheckerCaptchaInactive = new VelocityChecker($loginLog, $this->ipCounter, $this->ipRangeCounter, $this->ipCountryCounter, $this->usernameCounter);
-
-		$this->assertFalse($velocityCheckerCaptchaInactive->isCaptchaActive());
-
-		$this->counterDao->createLogEntry(Counter::TYPE_IP, self::TEST_IP_ADDRESS, 1);
-
-		$velocityCheckerCaptchaActive = new VelocityChecker($loginLog, $this->ipCounter, $this->ipRangeCounter, $this->ipCountryCounter, $this->usernameCounter);
-
-		$this->assertTrue($velocityCheckerCaptchaActive->isCaptchaActive());
+		return array(
+			// Successful login checks: captcha.
+			array(false, 0, 0, 0, 0, self::TEST_LOGIN_RESULT_SUCCESS, self::TEST_REG_COUNTRY),
+			// Tests that failed login attempts reaches the limit.
+			array(false, 0, 0, 0, 0, self::TEST_LOGIN_RESULT_FAILED, self::TEST_REG_COUNTRY),
+			array(false, VelocityChecker::MAX_FAILED_LOGIN_ATTEMPTS_FROM_ONE_IP, 0, 0, 0, self::TEST_LOGIN_RESULT_FAILED, self::TEST_REG_COUNTRY),
+			array(false, 0, VelocityChecker::MAX_FAILED_LOGIN_ATTEMPTS_FROM_ONE_RANGE, 0, 0, self::TEST_LOGIN_RESULT_FAILED, self::TEST_REG_COUNTRY),
+			array(false, 0, 0, VelocityChecker::MAX_FAILED_LOGIN_ATTEMPTS_FROM_ONE_COUNTRY, 0, self::TEST_LOGIN_RESULT_FAILED, self::TEST_REG_COUNTRY),
+			array(false, 0, 0, 0, VelocityChecker::MAX_FAILED_LOGIN_ATTEMPTS_WITH_ONE_USERNAME, self::TEST_LOGIN_RESULT_FAILED, self::TEST_REG_COUNTRY),
+			array(true, VelocityChecker::MAX_FAILED_LOGIN_ATTEMPTS_FROM_ONE_IP + 1, 0, 0, 0, self::TEST_LOGIN_RESULT_FAILED, self::TEST_REG_COUNTRY),
+			array(true, 0, VelocityChecker::MAX_FAILED_LOGIN_ATTEMPTS_FROM_ONE_RANGE + 1, 0, 0, self::TEST_LOGIN_RESULT_FAILED, self::TEST_REG_COUNTRY),
+			array(true, 0, 0, VelocityChecker::MAX_FAILED_LOGIN_ATTEMPTS_FROM_ONE_COUNTRY + 1, 0, self::TEST_LOGIN_RESULT_FAILED, self::TEST_REG_COUNTRY),
+			array(true, 0, 0, 0, VelocityChecker::MAX_FAILED_LOGIN_ATTEMPTS_WITH_ONE_USERNAME + 1, self::TEST_LOGIN_RESULT_FAILED, self::TEST_REG_COUNTRY),
+			// Tests that failed login attempts = IP limit when the IP country and registration country are different.
+			array(false, 0, 0, 0, 0, self::TEST_LOGIN_RESULT_FAILED, self::TEST_FOREIGN_REG_COUNTRY),
+		);
 	}
 
 }

@@ -8,7 +8,40 @@ use Kata\LegacyProduct\ProductDao;
 
 class ProductDaoTest extends \PHPUnit_Framework_TestCase
 {
+	/** The name of test DB. */
 	const TEST_DATABASE_FILE = 'LegacyProductTest.db';
+
+	/** Data of products */
+	const PRODUCT_NULL_ID      = 0;
+	const PRODUCT_NULL_EAN     = 'XXXX';
+	const PRODUCT_NULL_NAME    = 'Null';
+
+	const PRODUCT_AUDI_ID      = 1;
+	const PRODUCT_AUDI_EAN     = '0001';
+	const PRODUCT_AUDI_NAME    = 'Audi';
+
+	const PRODUCT_RENAULT_ID   = 2;
+	const PRODUCT_RENAULT_EAN  = '002';
+	const PRODUCT_RENAULT_NAME = 'Renault';
+
+	const PRODUCT_SEAT_ID      = 3;
+	const PRODUCT_SEAT_EAN     = '0003';
+	const PRODUCT_SEAT_NAME    = 'Seat';
+
+	const PRODUCT_HONDA_ID     = 4;
+	const PRODUCT_HONDA_EAN    = '0004';
+	const PRODUCT_HONDA_NAME   = 'Honda';
+
+	const PRODUCT_BMW_ID       = 5;
+	const PRODUCT_BMW_EAN      = '0005';
+	const PRODUCT_BMW_NAME     = 'BMW';
+
+	const PRODUCT_SKODA_ID     = 6;
+	const PRODUCT_SKODA_EAN    = '0006';
+	const PRODUCT_SKODA_NAME   = 'Skoda';
+
+	const NON_EXISTENT_PRODUCT_ID = 32;
+	const INVALID_PRODUCT_ID      = 'asdasd';
 
 	/**
 	 * DB connectio object.
@@ -38,55 +71,59 @@ class ProductDaoTest extends \PHPUnit_Framework_TestCase
 	/**
 	 * Tests the returned product.
 	 *
+	 * @param Product $product
+	 *
 	 * @return void
+	 *
+	 * @dataProvider providerProducts
 	 */
-	public function testGetByEan()
+	public function testGetByEan($product)
 	{
 		$sth = $this->pdo->prepare("INSERT INTO `product` (`id`, `ean`, `name`) VALUES(:id, :ean, :name)");
-		$sth->bindValue(':id', 1, SQLITE3_INTEGER);
-		$sth->bindValue(':ean', '0001');
-		$sth->bindValue(':name', 'Audi');
+		$sth->bindValue(':id',   $product->id, SQLITE3_INTEGER);
+		$sth->bindValue(':ean',  $product->ean);
+		$sth->bindValue(':name', $product->name);
 		$sth->execute();
-
-		$product       = new Product();
-		$product->id   = 1;
-		$product->ean  = '0001';
-		$product->name = 'Audi';
 
 		$productDao = new ProductDao($this->pdo);
 
-		$this->assertEquals($product, $productDao->getByEan('0001'));
-
-		$nullProduct = new NullProduct();
-
-		$this->assertEquals($nullProduct, $productDao->getByEan('XXXX'));
+		$this->assertEquals($product, $productDao->getByEan($product->ean));
 	}
 
 	/**
 	 * Tests the returned product.
 	 *
+	 * @param Product $product
+	 *
 	 * @return void
+	 *
+	 * @dataProvider providerProducts
 	 */
-	public function testGetById()
+	public function testGetById($product)
 	{
 		$sth = $this->pdo->prepare("INSERT INTO `product` (`id`, `ean`, `name`) VALUES(:id, :ean, :name)");
-		$sth->bindValue(':id', 1, SQLITE3_INTEGER);
-		$sth->bindValue(':ean', '0001');
-		$sth->bindValue(':name', 'Audi');
+		$sth->bindValue(':id', $product->id, SQLITE3_INTEGER);
+		$sth->bindValue(':ean', $product->ean);
+		$sth->bindValue(':name', $product->name);
 		$sth->execute();
-
-		$product       = new Product();
-		$product->id   = 1;
-		$product->ean  = '0001';
-		$product->name = 'Audi';
 
 		$productDao = new ProductDao($this->pdo);
 
-		$this->assertEquals($product, $productDao->getById(1));
+		$this->assertEquals($product, $productDao->getById($product->id));
+	}
 
-		$nullProduct = new NullProduct();
-
-		$this->assertEquals($nullProduct, $productDao->getById(32));
+	/**
+	 * Returns products.
+	 *
+	 * @return array
+	 */
+	public function providerProducts()
+	{
+		return array(
+			array(new Product(self::PRODUCT_AUDI_ID, self::PRODUCT_AUDI_EAN, self::PRODUCT_AUDI_NAME)),
+			array(new Product(self::PRODUCT_SEAT_ID, self::PRODUCT_SEAT_EAN, self::PRODUCT_SEAT_NAME)),
+			array(new NullProduct()),
+		);
 	}
 
 	/**
@@ -94,11 +131,11 @@ class ProductDaoTest extends \PHPUnit_Framework_TestCase
 	 *
      * @expectedException Exception
      */
-	public function testCreateWithEmptyEANException()
+	public function testCreateWithEmptyEanException()
 	{
 		$product       = new Product();
-		$product->id   = 1;
-		$product->name = 'Renault';
+		$product->id   = self::PRODUCT_AUDI_ID;
+		$product->name = self::PRODUCT_AUDI_NAME;
 
 		$productDao = new ProductDao($this->pdo);
 
@@ -113,8 +150,8 @@ class ProductDaoTest extends \PHPUnit_Framework_TestCase
 	public function testCreateWithEmptyNameException()
 	{
 		$product      = new Product();
-		$product->id  = 1;
-		$product->ean = '0001';
+		$product->id  = self::PRODUCT_AUDI_ID;
+		$product->ean = self::PRODUCT_AUDI_EAN;
 
 		$productDao = new ProductDao($this->pdo);
 
@@ -124,31 +161,52 @@ class ProductDaoTest extends \PHPUnit_Framework_TestCase
 	/**
 	 * Tests creating.
 	 *
+	 * @param Product $product
+	 *
 	 * @return void
+	 *
+	 * @dataProvider providerProductsToCreating
 	 */
-	public function testCreate()
+	public function testCreate($product)
+	{
+		$productDao = new ProductDao($this->pdo);
+
+		$this->assertTrue($productDao->create($product));
+	}
+
+	/**
+	 * Tests creating.
+	 *
+	 * @param Product $product
+	 *
+	 * @return void
+	 *
+	 * @dataProvider providerProductsToCreating
+	 */
+	public function testCreateFailed($product)
 	{
 		$sth = $this->pdo->prepare("INSERT INTO `product` (`id`, `ean`, `name`) VALUES(:id, :ean, :name)");
-		$sth->bindValue(':id', 1, SQLITE3_INTEGER);
-		$sth->bindValue(':ean', '0001');
-		$sth->bindValue(':name', 'Audi');
+		$sth->bindValue(':id', $product->id, SQLITE3_INTEGER);
+		$sth->bindValue(':ean', $product->ean);
+		$sth->bindValue(':name', $product->name);
 		$sth->execute();
 
 		$productDao = new ProductDao($this->pdo);
 
-		$notUniqueProduct       = new Product();
-		$notUniqueProduct->id   = 1;
-		$notUniqueProduct->ean  = '0001';
-		$notUniqueProduct->name = 'Audi';
+		$this->assertFalse($productDao->create($product));
+	}
 
-		$this->assertFalse($productDao->create($notUniqueProduct));
-
-		$newProduct       = new Product();
-		$newProduct->id   = 2;
-		$newProduct->ean  = '0002';
-		$newProduct->name = 'Seat';
-
-		$this->assertTrue($productDao->create($newProduct));
+	/**
+	 * Returns the result of creating and product.
+	 *
+	 * @return array
+	 */
+	public function providerProductsToCreating()
+	{
+		return array(
+			array(new Product(self::PRODUCT_AUDI_ID, self::PRODUCT_AUDI_EAN, self::PRODUCT_AUDI_NAME)),
+			array(new Product(self::PRODUCT_BMW_ID, self::PRODUCT_BMW_EAN, self::PRODUCT_BMW_NAME)),
+		);
 	}
 
 	/**
@@ -156,11 +214,11 @@ class ProductDaoTest extends \PHPUnit_Framework_TestCase
 	 *
      * @expectedException Exception
 	 */
-	public function testModifyWithEmptyEANException()
+	public function testModifyWithEmptyEanException()
 	{
 		$product       = new Product();
-		$product->id   = 1;
-		$product->name = 'Renault';
+		$product->id   = self::PRODUCT_AUDI_ID;
+		$product->name = self::PRODUCT_AUDI_NAME;
 
 		$productDao = new ProductDao($this->pdo);
 
@@ -174,9 +232,9 @@ class ProductDaoTest extends \PHPUnit_Framework_TestCase
 	 */
 	public function testModifyWithEmptyNameException()
 	{
-		$product       = new Product();
-		$product->id   = 1;
-		$product->ean = '0001';
+		$product      = new Product();
+		$product->id  = self::PRODUCT_AUDI_ID;
+		$product->ean = self::PRODUCT_AUDI_EAN;
 
 		$productDao = new ProductDao($this->pdo);
 
@@ -186,76 +244,76 @@ class ProductDaoTest extends \PHPUnit_Framework_TestCase
 	/**
 	 * Tests that the EAN is not unique.
 	 *
-     * @expectedException Exception
+     * @return void
 	 */
-	public function testModifyNotUniqueEanException()
+	public function testModifyNotUniqueEan()
 	{
 		$sth = $this->pdo->prepare("INSERT INTO `product` (`id`, `ean`, `name`) VALUES(:id, :ean, :name)");
-		$sth->bindValue(':id', 1, SQLITE3_INTEGER);
-		$sth->bindValue(':ean', '0001');
-		$sth->bindValue(':name', 'Audi');
-		$sth->execute();
-
-		$sth = $this->pdo->prepare("INSERT INTO `product` (`id`, `ean`, `name`) VALUES(:id, :ean, :name)");
-		$sth->bindValue(':id', 2, SQLITE3_INTEGER);
-		$sth->bindValue(':ean', '0002');
-		$sth->bindValue(':name', 'Honda');
+		$sth->bindValue(':id',   self::PRODUCT_AUDI_ID, SQLITE3_INTEGER);
+		$sth->bindValue(':ean',  self::PRODUCT_AUDI_EAN);
+		$sth->bindValue(':name', self::PRODUCT_AUDI_NAME);
 		$sth->execute();
 
 		$product       = new Product();
-		$product->id   = 2;
-		$product->ean  = '0001';
-		$product->name = 'Honda';
+		$product->id   = self::PRODUCT_HONDA_ID;
+		$product->ean  = self::PRODUCT_AUDI_EAN;
+		$product->name = self::PRODUCT_HONDA_NAME;
 
 		$productDao = new ProductDao($this->pdo);
 
-		$productDao->modify($product);
+		$this->assertFalse($productDao->modify($product));
 	}
 
 	/**
 	 * Tests mod.
 	 *
+	 * @param Product $originalProduct
+	 * @param Product $modifiedProduct
+	 *
 	 * @return void
+	 *
+	 * @dataProvider providerProductsToModifying
 	 */
-	public function testModify()
+	public function testModify($originalProduct, $modifiedProduct)
 	{
 		$sth = $this->pdo->prepare("INSERT INTO `product` (`id`, `ean`, `name`) VALUES(:id, :ean, :name)");
-		$sth->bindValue(':id', 1, SQLITE3_INTEGER);
-		$sth->bindValue(':ean', '0001');
-		$sth->bindValue(':name', 'Audi');
+		$sth->bindValue(':id',   $originalProduct->id, SQLITE3_INTEGER);
+		$sth->bindValue(':ean',  $originalProduct->ean);
+		$sth->bindValue(':name', $originalProduct->name);
 		$sth->execute();
 
 		$productDao = new ProductDao($this->pdo);
 
-		// Modifies EAN and name.
-		$product       = new Product();
-		$product->id   = 1;
-		$product->ean  = '0002';
-		$product->name = 'BMW';
+		$this->assertTrue($productDao->modify($modifiedProduct));
 
-		$this->assertTrue($productDao->modify($product));
+		$sthCheck = $this->pdo->prepare("SELECT * FROM `product` WHERE `id` = :id");
+		$sthCheck->bindValue(':id', $modifiedProduct->id);
+		$resultCheck = $sthCheck->execute();
 
-		$result = $this->pdo->query("SELECT * FROM `product` WHERE `id` = 1");
-		$row    = $result->fetchArray(SQLITE3_ASSOC);
+		$row = $resultCheck->fetchArray(SQLITE3_ASSOC);
 
-		$this->assertEquals(1, $row['id']);
-		$this->assertEquals('0002', $row['ean']);
-		$this->assertEquals('BMW', $row['name']);
+		$this->assertEquals($modifiedProduct->id,   $row['id']);
+		$this->assertEquals($modifiedProduct->ean,  $row['ean']);
+		$this->assertEquals($modifiedProduct->name, $row['name']);
+	}
 
-		// Modifies only name
-		$productWithNewName       = new Product();
-		$productWithNewName->id   = 1;
-		$productWithNewName->ean  = '0002';
-		$productWithNewName->name = 'Skoda';
-
-		$this->assertTrue($productDao->modify($productWithNewName));
-
-		$resultWithNewName = $this->pdo->query("SELECT * FROM `product` WHERE `id` = 1");
-		$rowWithNewName    = $resultWithNewName->fetchArray(SQLITE3_ASSOC);
-
-		$this->assertEquals(1, $rowWithNewName['id']);
-		$this->assertEquals('0002', $rowWithNewName['ean']);
-		$this->assertEquals('Skoda', $rowWithNewName['name']);
+	/**
+	 * Returns the original and modified products.
+	 *
+	 * @return array
+	 */
+	public function providerProductsToModifying()
+	{
+		return array(
+			array(
+				new Product(self::PRODUCT_AUDI_ID, self::PRODUCT_AUDI_EAN, self::PRODUCT_AUDI_NAME),
+				new Product(self::PRODUCT_AUDI_ID, self::PRODUCT_BMW_EAN, self::PRODUCT_BMW_NAME),
+			),
+			array(
+				new Product(self::PRODUCT_SEAT_ID, self::PRODUCT_SEAT_EAN, self::PRODUCT_SEAT_NAME),
+				new Product(self::PRODUCT_SEAT_ID, self::PRODUCT_SEAT_EAN, self::PRODUCT_HONDA_NAME),
+			),
+		);
 	}
 
 	/**
@@ -266,8 +324,8 @@ class ProductDaoTest extends \PHPUnit_Framework_TestCase
 	public function testDeleteWithoutIdException()
 	{
 		$product       = new Product();
-		$product->ean  = '0002';
-		$product->name = 'BMW';
+		$product->ean  = self::PRODUCT_SKODA_EAN;
+		$product->name = self::PRODUCT_SKODA_NAME;
 
 		$productDao = new ProductDao($this->pdo);
 
@@ -282,9 +340,9 @@ class ProductDaoTest extends \PHPUnit_Framework_TestCase
 	public function testDeleteNoIntegerIdException()
 	{
 		$product       = new Product();
-		$product->id   = 'asdasd';
-		$product->ean  = '0002';
-		$product->name = 'BMW';
+		$product->id   = self::INVALID_PRODUCT_ID;
+		$product->ean  = self::PRODUCT_SKODA_EAN;
+		$product->name = self::PRODUCT_SKODA_NAME;
 
 		$productDao = new ProductDao($this->pdo);
 
@@ -295,28 +353,41 @@ class ProductDaoTest extends \PHPUnit_Framework_TestCase
 	 * Tests deleting.
 	 *
 	 * @return void
+	 *
+	 * @dataProvider providerProductsToDeleting
 	 */
-	public function testDelete()
+	public function testDelete($product)
 	{
 		$sth = $this->pdo->prepare("INSERT INTO `product` (`id`, `ean`, `name`) VALUES(:id, :ean, :name)");
-		$sth->bindValue(':id', 1, SQLITE3_INTEGER);
-		$sth->bindValue(':ean', '0001');
-		$sth->bindValue(':name', 'Audi');
+		$sth->bindValue(':id',   $product->id, SQLITE3_INTEGER);
+		$sth->bindValue(':ean',  $product->ean);
+		$sth->bindValue(':name', $product->name);
 		$sth->execute();
 
 		$productDao = new ProductDao($this->pdo);
 
-		$product       = new Product();
-		$product->id   = 1;
-		$product->ean  = '0001';
-		$product->name = 'Audi';
-
 		$this->assertTrue($productDao->delete($product));
 
-		$result = $this->pdo->query("SELECT * FROM `product` WHERE `id` = 1");
-		$row    = $result->fetchArray(SQLITE3_ASSOC);
+		$sthCheck = $this->pdo->prepare("SELECT * FROM `product` WHERE `id` = :id");
+		$sthCheck->bindValue(':id', $product->id, SQLITE3_INTEGER);
+		$resultCheck = $sthCheck->execute();
+
+		$row = $resultCheck->fetchArray(SQLITE3_ASSOC);
 
 		$this->assertFalse($row);
+	}
+
+	/**
+	 * Returns products.
+	 *
+	 * @return array
+	 */
+	public function providerProductsToDeleting()
+	{
+		return array(
+			array(new Product(self::PRODUCT_AUDI_ID, self::PRODUCT_AUDI_EAN, self::PRODUCT_AUDI_NAME)),
+			array(new Product(self::PRODUCT_SEAT_ID, self::PRODUCT_SEAT_EAN, self::PRODUCT_SEAT_NAME)),
+		);
 	}
 
 }

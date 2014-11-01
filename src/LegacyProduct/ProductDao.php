@@ -146,29 +146,27 @@ class ProductDao
 		}
 
 		$oldProduct = $this->getById($product->id);
-		if ($oldProduct->ean != $product->ean && !$this->checkUnique($product->ean))
+		if ($oldProduct->ean == $product->ean || $this->checkUnique($product->ean))
 		{
-			throw new \Exception(__METHOD__ . " - The EAN is not unique!");
-		}
+			$sth = $this->pdo->prepare("
+				UPDATE
+					`product`
+				SET
+					`ean` = :ean,
+					`name` = :name
+				WHERE
+					`id` = :id"
+			);
 
-		$sth = $this->pdo->prepare("
-			UPDATE
-				`product`
-			SET
-				`ean` = :ean,
-				`name` = :name
-			WHERE
-				`id` = :id"
-		);
+			$sth->bindValue(':ean', $product->ean);
+			$sth->bindValue(':name', $product->name);
+			$sth->bindValue(':id', $product->id, SQLITE3_INTEGER);
 
-		$sth->bindValue(':ean', $product->ean);
-		$sth->bindValue(':name', $product->name);
-		$sth->bindValue(':id', $product->id, SQLITE3_INTEGER);
-
-		$result = $sth->execute();
-		if ($result !== false)
-		{
-			$isModified = true;
+			$result = $sth->execute();
+			if ($result !== false)
+			{
+				$isModified = true;
+			}
 		}
 
 		return $isModified;

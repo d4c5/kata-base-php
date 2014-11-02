@@ -55,30 +55,7 @@ class CounterDaoTest extends \PHPUnit_Framework_TestCase
 	 */
 	public function testGetCounter($type, $measure, $counter, $unixTimestamp)
 	{
-		$statement = $this->dbConnection->prepare("
-			INSERT INTO
-				`counter`
-			(
-				`type`,
-				`measure`,
-				`counter`,
-				`time`
-			)
-			VALUES
-			(
-				:type,
-				:measure,
-				:counter,
-				:time
-			)"
-		);
-
-		$statement->bindValue(':type', $type);
-		$statement->bindValue(':measure', $measure);
-		$statement->bindValue(':counter', $counter, SQLITE3_INTEGER);
-		$statement->bindValue(':time', $unixTimestamp, SQLITE3_INTEGER);
-
-		$statement->execute();
+		$this->insertCounter($type, $measure, $counter, $unixTimestamp);
 
 		$counterDao = new CounterDao($this->dbConnection);
 
@@ -118,54 +95,13 @@ class CounterDaoTest extends \PHPUnit_Framework_TestCase
 	{
 		if (!empty($cumulatedCounter))
 		{
-			$statement = $this->dbConnection->prepare("
-				INSERT INTO
-					`counter`
-				(
-					`type`,
-					`measure`,
-					`counter`,
-					`time`
-				)
-				VALUES
-				(
-					:type,
-					:measure,
-					:counter,
-					:time
-				)"
-			);
-
-			$statement->bindValue(':type', $type);
-			$statement->bindValue(':measure', $measure);
-			$statement->bindValue(':counter', $cumulatedCounter, SQLITE3_INTEGER);
-			$statement->bindValue(':time', time(), SQLITE3_INTEGER);
-
-			$statement->execute();
+			$this->insertCounter($type, $measure, $cumulatedCounter, time());
 		}
 
 		$counterDao = new CounterDao($this->dbConnection);
 		$counterDao->createLogEntry($type, $measure, $counter, $unixTimestamp);
 
-		$statement = $this->dbConnection->prepare("
-			SELECT
-				SUM(`counter`) AS counter
-			FROM
-				`counter`
-			WHERE
-				`type` = :type
-				AND
-				`measure` = :measure
-				AND
-				`time` >= :lowerTimestampLimit"
-		);
-		$statement->bindValue(':type', $type);
-		$statement->bindValue(':measure', $measure);
-		$statement->bindValue(':lowerTimestampLimit', time() - CounterDao::COUNTER_TTL, SQLITE3_INTEGER);
-
-		$result = $statement->execute();
-
-		$row = $result->fetchArray(SQLITE3_ASSOC);
+		$row = $this->getCounter($type, $measure);
 
 		$this->assertEquals($expectedCounter, $row['counter']);
 	}
@@ -205,27 +141,8 @@ class CounterDaoTest extends \PHPUnit_Framework_TestCase
 		$counterDao = new CounterDao($this->dbConnection);
 		$counterDao->insertLogEntry($type, $measure, $counter, $unixTimestamp);
 
-		$statement = $this->dbConnection->prepare("
-			SELECT
-				`type`,
-				`measure`,
-				`counter`
-			FROM
-				`counter`
-			WHERE
-				`type` = :type
-				AND
-				`measure` = :measure"
-		);
-		$statement->bindValue(':type', $type);
-		$statement->bindValue(':measure', $measure);
+		$row = $this->getCounter($type, $measure);
 
-		$result = $statement->execute();
-
-		$row = $result->fetchArray(SQLITE3_ASSOC);
-
-		$this->assertEquals($type, $row['type']);
-		$this->assertEquals($measure, $row['measure']);
 		$this->assertEquals($counter, $row['counter']);
 	}
 
@@ -257,54 +174,12 @@ class CounterDaoTest extends \PHPUnit_Framework_TestCase
 	 */
 	public function testUpdateLogEntry($type, $measure, $counter)
 	{
-		$statement = $this->dbConnection->prepare("
-			INSERT INTO
-				`counter`
-			(
-				`type`,
-				`measure`,
-				`counter`,
-				`time`
-			)
-			VALUES
-			(
-				:type,
-				:measure,
-				:counter,
-				:time
-			)"
-		);
-
-		$statement->bindValue(':type', $type);
-		$statement->bindValue(':measure', $measure);
-		$statement->bindValue(':counter', 1, SQLITE3_INTEGER);
-		$statement->bindValue(':time', time(), SQLITE3_INTEGER);
-
-		$statement->execute();
+		$this->insertCounter($type, $measure, 1, time());
 
 		$counterDao = new CounterDao($this->dbConnection);
 		$counterDao->updateLogEntry($type, $measure, $counter);
 
-		$statementCheck = $this->dbConnection->prepare("
-			SELECT
-				SUM(`counter`) AS counter
-			FROM
-				`counter`
-			WHERE
-				`type` = :type
-				AND
-				`measure` = :measure
-				AND
-				`time` >= :lowerTimestampLimit"
-		);
-
-		$statementCheck->bindValue(':type', $type);
-		$statementCheck->bindValue(':measure', $measure);
-		$statementCheck->bindValue(':lowerTimestampLimit', time() - CounterDao::COUNTER_TTL, SQLITE3_INTEGER);
-
-		$resultCheck = $statementCheck->execute();
-
-		$row = $resultCheck->fetchArray(SQLITE3_ASSOC);
+		$row = $this->getCounter($type, $measure);
 
 		$this->assertEquals($counter, $row['counter']);
 	}
@@ -336,6 +211,43 @@ class CounterDaoTest extends \PHPUnit_Framework_TestCase
 	 */
 	public function testDeleteLogEntry($type, $measure)
 	{
+		$this->insertCounter($type, $measure, 1, time());
+
+		$counterDao = new CounterDao($this->dbConnection);
+		$counterDao->deleteLogEntry($type, $measure);
+
+		$row = $this->getCounter($type, $measure);
+
+		$this->assertEquals(0, $row['counter']);
+	}
+
+	/**
+	 * Returns type ans measure.
+	 *
+	 * @return array
+	 */
+	public function providerDataOfCounterToDeleting()
+	{
+		return array(
+			array(Counter::TYPE_IP, self::TEST_IP_ADDRESS),
+			array(Counter::TYPE_IP_RANGE, self::TEST_IP_RANGE),
+			array(Counter::TYPE_IP_COUNTRY, self::TEST_IP_COUNTRY),
+			array(Counter::TYPE_USERNAME, self::TEST_USERNAME),
+		);
+	}
+
+	/**
+	 * Initializes the counter.
+	 *
+	 * @param string $type
+	 * @param string $measure
+	 * @param int    $counter
+	 * @param int    $unixTimestamp
+	 *
+	 * @return void
+	 */
+	private function insertCounter($type, $measure, $counter, $unixTimestamp)
+	{
 		$statement = $this->dbConnection->prepare("
 			INSERT INTO
 				`counter`
@@ -354,50 +266,47 @@ class CounterDaoTest extends \PHPUnit_Framework_TestCase
 			)"
 		);
 
-		$statement->bindValue(':type', $type);
+		$statement->bindValue(':type',    $type);
 		$statement->bindValue(':measure', $measure);
-		$statement->bindValue(':counter', 1, SQLITE3_INTEGER);
-		$statement->bindValue(':time', time(), SQLITE3_INTEGER);
+		$statement->bindValue(':counter', $counter, SQLITE3_INTEGER);
+		$statement->bindValue(':time',    $unixTimestamp, SQLITE3_INTEGER);
 
 		$statement->execute();
+	}
 
-		$counterDao = new CounterDao($this->dbConnection);
-		$counterDao->deleteLogEntry($type, $measure);
+	/**
+	 * Returns counter.
+	 *
+	 * @return array
+	 */
+	private function getCounter($type, $measure)
+	{
+		$row = array();
 
-		$statementCheck = $this->dbConnection->prepare("
+		$statement = $this->dbConnection->prepare("
 			SELECT
-				COUNT(*) AS cnt
+				SUM(`counter`) AS counter
 			FROM
 				`counter`
 			WHERE
 				`type` = :type
 				AND
-				`measure` = :measure"
+				`measure` = :measure
+				AND
+				`time` >= :lowerTimestampLimit"
 		);
 
-		$statementCheck->bindValue(':type', $type);
-		$statementCheck->bindValue(':measure', $measure);
+		$statement->bindValue(':type', $type);
+		$statement->bindValue(':measure', $measure);
+		$statement->bindValue(':lowerTimestampLimit', time() - CounterDao::COUNTER_TTL, SQLITE3_INTEGER);
 
-		$resultCheck = $statementCheck->execute();
+		$result = $statement->execute();
+		if ($result !== false)
+		{
+			$row = $result->fetchArray(SQLITE3_ASSOC);
+		}
 
-		$row = $resultCheck->fetchArray(SQLITE3_ASSOC);
-
-		$this->assertEquals(0, $row['cnt']);
-	}
-
-	/**
-	 * Returns type ans measure.
-	 *
-	 * @return array
-	 */
-	public function providerDataOfCounterToDeleting()
-	{
-		return array(
-			array(Counter::TYPE_IP, self::TEST_IP_ADDRESS),
-			array(Counter::TYPE_IP_RANGE, self::TEST_IP_RANGE),
-			array(Counter::TYPE_IP_COUNTRY, self::TEST_IP_COUNTRY),
-			array(Counter::TYPE_USERNAME, self::TEST_USERNAME),
-		);
+		return $row;
 	}
 
 }

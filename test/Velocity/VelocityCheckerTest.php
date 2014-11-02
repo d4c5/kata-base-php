@@ -91,6 +91,7 @@ class VelocityCheckerTest extends \PHPUnit_Framework_TestCase
 		$ipCountryCounter->expects($this->any())
 				->method('getCounter')
 				->will($this->returnValue($numberOfIpCountryCounter));
+
 		$usernameCounter = $this->getMock(
 			'\Kata\Velocity\Counter',
 			array('getCounter', 'reset'),

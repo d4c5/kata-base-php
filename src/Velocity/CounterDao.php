@@ -4,6 +4,14 @@ namespace Kata\Velocity;
 
 /**
  * Counter DAO.
+ *
+ * 	CREATE TABLE `counter` (
+ *		`type` varchar(15) NOT NULL,
+ *		`measure` varchar(16) NOT NULL,
+ *		`counter` int(11),
+ *		`time` timestamp,
+ *		PRIMARY KEY(`type`, `measure`, `time`)
+ *	);
  */
 class CounterDao
 {
@@ -24,26 +32,6 @@ class CounterDao
 	public function __construct(\SQLite3 $dbConnection)
 	{
 		$this->dbConnection = $dbConnection;
-	}
-
-	/**
-	 * Creates counter table.
-	 *
-	 * @return void
-	 */
-	public function createTable()
-	{
-		$this->dropTable();
-
-		$this->dbConnection->exec("
-			CREATE TABLE `counter` (
-				`type` varchar(15) NOT NULL,
-				`measure` varchar(16) NOT NULL,
-				`counter` int(11),
-				`time` timestamp,
-				PRIMARY KEY(`type`, `measure`, `time`)
-			)"
-		);
 	}
 
 	/**
@@ -246,26 +234,6 @@ class CounterDao
 		$statement->bindValue(':measure', $measure);
 
 		$statement->execute();
-	}
-
-	/**
-	 * Drops counter table.
-	 *
-	 * @return void
-	 */
-	public function dropTable()
-	{
-		$this->dbConnection->exec("DROP TABLE IF EXISTS `counter`");
-	}
-
-	/**
-	 * Destructor.
-	 *
-	 * @return void
-	 */
-	public function __destruct()
-	{
-		// $this->dropTable();
 	}
 
 }

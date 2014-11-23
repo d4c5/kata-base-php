@@ -58,7 +58,6 @@ class ProductDaoTest extends \PHPUnit_Framework_TestCase
 	public function setUp()
 	{
 		$this->pdo = new \SQLite3('test/LegacyProduct/' . self::TEST_DATABASE_FILE);
-		$this->pdo->exec("DROP TABLE IF EXISTS `product`");
 		$this->pdo->exec("
 			CREATE TABLE `product` (
 				`id` INTEGER PRIMARY KEY,
@@ -66,6 +65,16 @@ class ProductDaoTest extends \PHPUnit_Framework_TestCase
 				`name` text default ''
 			)"
 		);
+	}
+
+	/**
+	 * Drops product table.
+	 *
+	 * @return void
+	 */
+	protected function tearDown()
+	{
+		$this->pdo->exec("DROP TABLE IF EXISTS `product`");
 	}
 
 	/**

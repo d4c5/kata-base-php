@@ -3,7 +3,6 @@
 namespace Kata\Test\StringCalculator;
 
 use Kata\StringCalculator\StringCalculator;
-use Kata\StringCalculator\InvalidIntegerException;
 
 /**
  * Tests for StringCalculator class.

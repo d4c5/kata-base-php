@@ -38,7 +38,7 @@ class StringCalculator
 	 *
 	 * @return void
 	 *
-	 * @throws InvalidIntegerException
+	 * @throws InvalidIntegerException|NegativeNumberException
 	 */
 	private function init($numbers)
 	{
@@ -46,6 +46,8 @@ class StringCalculator
 		$cleanedNumbers = $this->getCleanedNumbers($numbers);
 
 		$integers = preg_split('/[\n'. preg_quote($delimiter) . ']/', $cleanedNumbers);
+
+		$negativeNumbers = array();
 
 		foreach ($integers as $integer)
 		{
@@ -57,10 +59,19 @@ class StringCalculator
 			$trimmedInteger = trim($integer);
 			if (!is_numeric($trimmedInteger))
 			{
-				throw new InvalidIntegerException('The given number is not integer [' . $trimmedInteger . ']');
+				throw new InvalidNumberException('The given number is not integer [' . $trimmedInteger . ']');
+			}
+			if ($trimmedInteger < 0)
+			{
+				$negativeNumbers[] = $trimmedInteger;
 			}
 
 			$this->integers[] = $trimmedInteger;
+		}
+
+		if (count($negativeNumbers))
+		{
+			throw new NegativeNumberException('The numbers contains negative numbers [' . implode(', ', $negativeNumbers) . ']');
 		}
 
 		return;

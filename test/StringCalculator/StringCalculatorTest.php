@@ -28,15 +28,29 @@ class StringCalculatorTest extends \PHPUnit_Framework_TestCase
 	}
 
 	/**
-	 * Tests invalid integer exception.
+	 * Tests invalid number exception.
 	 *
 	 * @return void
 	 *
-	 * @expectedException \Kata\StringCalculator\InvalidIntegerException
+	 * @expectedException \Kata\StringCalculator\InvalidNumberException
 	 */
-	public function testInvalidInteger()
+	public function testInvalidNumberException()
 	{
 		$stringCalculator = new StringCalculator("A,B");
+		$stringCalculator->add();
+	}
+
+	/**
+	 * Tests negative number exception.
+	 *
+	 * @return void
+	 *
+	 * @expectedException \Kata\StringCalculator\NegativeNumberException
+	 * @expectedExceptionMessage The numbers contains negative numbers [-2, -3]
+	 */
+	public function testNegativeNumberException()
+	{
+		$stringCalculator = new StringCalculator("-2,-3");
 		$stringCalculator->add();
 	}
 

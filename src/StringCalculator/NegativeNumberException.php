@@ -5,7 +5,7 @@ namespace Kata\StringCalculator;
 /**
  * Invalid integer exception.
  */
-class InvalidIntegerException extends \Exception
+class NegativeNumberException extends \Exception
 {
 
 }

@@ -7,6 +7,9 @@ namespace Kata\StringCalculator;
  */
 class StringCalculator
 {
+	const DEFAULT_DELIMITER = ',';
+	const DELIMITER_PREFIX  = '//';
+
 	/**
 	 * Formatted and checked numbers.
 	 *
@@ -39,7 +42,10 @@ class StringCalculator
 	 */
 	private function init($numbers)
 	{
-		$integers = preg_split('/[\r\n,]/', $numbers);
+		$delimiter      = $this->getDelimiter($numbers);
+		$cleanedNumbers = $this->getCleanedNumbers($numbers);
+
+		$integers = preg_split('/[\n'. preg_quote($delimiter) . ']/', $cleanedNumbers);
 
 		foreach ($integers as $integer)
 		{
@@ -58,6 +64,47 @@ class StringCalculator
 		}
 
 		return;
+	}
+
+	/**
+	 * Returns delimtier.
+	 *
+	 * @param string $numbers
+	 *
+	 * @return string
+	 */
+	private function getDelimiter($numbers)
+	{
+		$delimiter = self::DEFAULT_DELIMITER;
+
+		if (substr($numbers, 0, 2) === self::DELIMITER_PREFIX)
+		{
+			$numbersWithoutDelimiterPrefix = substr($numbers, 2);
+			list($delimiter,)              = explode("\n", $numbersWithoutDelimiterPrefix, 2);
+		}
+
+		return urldecode($delimiter);
+	}
+
+	/**
+	 * Returns cleaned numbers.
+	 *
+	 * @param string $numbers
+	 *
+	 * @return string
+	 */
+	private function getCleanedNumbers($numbers)
+	{
+		$cleanedNumbers = $numbers;
+
+		if (substr($numbers, 0, 2) === self::DELIMITER_PREFIX)
+		{
+			// TODO: false-ra Exception!
+			$firstNewLinePosition = strpos($numbers, "\n");
+			$cleanedNumbers       = substr($numbers, $firstNewLinePosition);
+		}
+
+		return $cleanedNumbers;
 	}
 
 	/**

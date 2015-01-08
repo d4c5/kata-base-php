@@ -69,11 +69,12 @@ class StringCalculatorTest extends \PHPUnit_Framework_TestCase
 			array(5, "1,,4"),
 			array(6, "1\n2,3"),
 			array(8, "2\n2\n2,2"),
-			array(3, "//;\n1;2"),
-			array(6, "//:\n1\n2:3"),
-			array(2, "//%0A\n1\n1"),
+			array(3, "//[;]\n1;2"),
+			array(6, "//[:]\n1\n2:3"),
+			array(2, "//[%0A]\n1\n1"),
 			array(2, "2,1001"),
 			array(1001, "1,1000"),
+			array(6, "//[***]\n1***2***3"),
 		);
 	}
 

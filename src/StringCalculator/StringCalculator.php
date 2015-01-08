@@ -94,8 +94,10 @@ class StringCalculator
 
 		if (substr($numbers, 0, 2) === self::DELIMITER_PREFIX)
 		{
-			$numbersWithoutDelimiterPrefix = substr($numbers, 2);
-			list($delimiter,)              = explode("\n", $numbersWithoutDelimiterPrefix, 2);
+			// TODO: syntax check //[delimiter]\n*
+			$numbersWithoutDelimiterPrefix    = substr($numbers, 3);
+			list($delimiterWithCloseBracket,) = explode("\n", $numbersWithoutDelimiterPrefix, 2);
+			$delimiter                        = trim($delimiterWithCloseBracket, "]");
 		}
 
 		return urldecode($delimiter);

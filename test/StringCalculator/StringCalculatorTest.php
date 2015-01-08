@@ -21,10 +21,23 @@ class StringCalculatorTest extends \PHPUnit_Framework_TestCase
 	 */
 	public function testAdd($expectedSummary, $numbers)
 	{
-		$stringCalculator = new StringCalculator();
-		$summary          = $stringCalculator->add($numbers);
+		$stringCalculator = new StringCalculator($numbers);
+		$summary          = $stringCalculator->add();
 
 		$this->assertEquals($expectedSummary, $summary, 'Difference between summaries: ' . $numbers);
+	}
+
+	/**
+	 * Tests invalid integer exception.
+	 *
+	 * @return void
+	 *
+	 * @expectedException \Exception
+	 */
+	public function testInvalidInteger()
+	{
+		$stringCalculator = new StringCalculator("A,B");
+		$stringCalculator->add();
 	}
 
 	/**

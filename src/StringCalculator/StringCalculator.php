@@ -8,17 +8,68 @@ namespace Kata\StringCalculator;
 class StringCalculator
 {
 	/**
+	 * Formatted and checked numbers.
+	 *
+	 * @var array
+	 */
+	private $integers = array();
+
+	/**
+	 * Constructor.
+	 *
+	 * @param string $numbers
+	 *
+	 * @return void
+	 */
+	public function __construct($numbers)
+	{
+		$this->init($numbers);
+
+		return;
+	}
+
+	/**
+	 * Initializes integers array.
+	 *
+	 * @param string $numbers
+	 *
+	 * @return void
+	 *
+	 * @throws \Exception
+	 */
+	private function init($numbers)
+	{
+		$integers = explode(',', $numbers);
+
+		foreach ($integers as $integer)
+		{
+			if (empty($integer))
+			{
+				$integer = 0;
+			}
+
+			$trimmedInteger = trim($integer);
+			if (!is_numeric($trimmedInteger))
+			{
+				throw new \Exception('The given number is not integer [' . $trimmedInteger . ']');
+			}
+
+			$this->integers[] = $trimmedInteger;
+		}
+
+		return;
+	}
+
+	/**
 	 * Adds the numbers in string.
 	 *
 	 * @param string $numbers
 	 *
 	 * @return int
 	 */
-	public function add($numbers)
+	public function add()
 	{
-		$integers = explode(',', $numbers);
-
-		return array_sum($integers);
+		return array_sum($this->integers);
 	}
 
 }

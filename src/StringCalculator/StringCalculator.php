@@ -7,9 +7,18 @@ namespace Kata\StringCalculator;
  */
 class StringCalculator
 {
+	/**
+	 * Adds the numbers in string.
+	 *
+	 * @param string $numbers
+	 *
+	 * @return int
+	 */
 	public function add($numbers)
 	{
-		return (int)$numbers;
+		$integers = explode(',', $numbers);
+
+		return array_sum($integers);
 	}
 
 }

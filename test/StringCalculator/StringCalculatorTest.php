@@ -37,6 +37,9 @@ class StringCalculatorTest extends \PHPUnit_Framework_TestCase
 		return array(
 			array(0, ""),
 			array(1, "1"),
+			array(3, "1,2"),
+			array(6, "1,2,3"),
+			array(5, "1,,4"),
 		);
 	}
 

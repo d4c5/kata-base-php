@@ -9,12 +9,34 @@ use Kata\StringCalculator\StringCalculator;
  */
 class StringCalculatorTest extends \PHPUnit_Framework_TestCase
 {
-	public function testAdd()
+	/**
+	 * Tests add method.
+	 *
+	 * @param int    $expectedSummary
+	 * @param string $numbers
+	 *
+	 * @return void
+	 *
+	 * @dataProvider providerNumbers
+	 */
+	public function testAdd($expectedSummary, $numbers)
 	{
 		$stringCalculator = new StringCalculator();
-		$sum = $stringCalculator->add("");
+		$summary          = $stringCalculator->add($numbers);
 
-		$this->assertEquals(0, $sum);
+		$this->assertEquals($expectedSummary, $summary, 'Difference between summaries: ' . $numbers);
+	}
+
+	/**
+	 * Data provider to add.
+	 *
+	 * @return array
+	 */
+	public function providerNumbers()
+	{
+		return array(
+			array(0, ""),
+		);
 	}
 
 }

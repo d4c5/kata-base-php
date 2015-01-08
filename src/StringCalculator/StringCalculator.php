@@ -39,7 +39,7 @@ class StringCalculator
 	 */
 	private function init($numbers)
 	{
-		$integers = explode(',', $numbers);
+		$integers = preg_split('/[\r\n,]/', $numbers);
 
 		foreach ($integers as $integer)
 		{

@@ -24,7 +24,7 @@ class StringCalculatorTest extends \PHPUnit_Framework_TestCase
 		$stringCalculator = new StringCalculator($numbers);
 		$summary          = $stringCalculator->add();
 
-		$this->assertEquals($expectedSummary, $summary, 'Difference between summaries: ' . $numbers);
+		$this->assertEquals($expectedSummary, $summary, 'Difference between summaries');
 	}
 
 	/**
@@ -53,6 +53,8 @@ class StringCalculatorTest extends \PHPUnit_Framework_TestCase
 			array(3, "1,2"),
 			array(6, "1,2,3"),
 			array(5, "1,,4"),
+			array(6, "1\n2,3"),
+			array(8, "2\n2\r2,2"),
 		);
 	}
 

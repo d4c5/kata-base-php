@@ -35,7 +35,7 @@ class StringCalculator
 	 *
 	 * @return void
 	 *
-	 * @throws \Exception
+	 * @throws InvalidIntegerException
 	 */
 	private function init($numbers)
 	{
@@ -51,7 +51,7 @@ class StringCalculator
 			$trimmedInteger = trim($integer);
 			if (!is_numeric($trimmedInteger))
 			{
-				throw new \Exception('The given number is not integer [' . $trimmedInteger . ']');
+				throw new InvalidIntegerException('The given number is not integer [' . $trimmedInteger . ']');
 			}
 
 			$this->integers[] = $trimmedInteger;

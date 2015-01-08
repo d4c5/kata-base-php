@@ -3,6 +3,7 @@
 namespace Kata\Test\StringCalculator;
 
 use Kata\StringCalculator\StringCalculator;
+use Kata\StringCalculator\InvalidIntegerException;
 
 /**
  * Tests for StringCalculator class.
@@ -32,7 +33,7 @@ class StringCalculatorTest extends \PHPUnit_Framework_TestCase
 	 *
 	 * @return void
 	 *
-	 * @expectedException \Exception
+	 * @expectedException \Kata\StringCalculator\InvalidIntegerException
 	 */
 	public function testInvalidInteger()
 	{

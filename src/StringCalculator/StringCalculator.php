@@ -65,6 +65,10 @@ class StringCalculator
 			{
 				$negativeNumbers[] = $trimmedInteger;
 			}
+			if ($trimmedInteger > 1000)
+			{
+				$trimmedInteger = 0;
+			}
 
 			$this->integers[] = $trimmedInteger;
 		}

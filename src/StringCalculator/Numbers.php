@@ -34,16 +34,23 @@ class Numbers
 	/**
 	 * Validates, parses and escapes input.
 	 *
-	 * @param string     $numbersDefinition
+	 * @param string     $numbers
 	 * @param Delimiters $delimiters
+	 * @param int        $limit
 	 *
 	 * @return void
 	 *
 	 * @throws InvalidArgumentException|InvalidIntegerException|NegativeNumberException
 	 */
-	public function __construct($numbersDefinition, Delimiters $delimiters, $limit = null)
+	public function __construct($numbers, Delimiters $delimiters, $limit = null)
 	{
-		$this->delimiters = $delimiters;
+		if (is_string($numbers) !== true)
+		{
+			throw new InvalidArgumentException('The "numbers" is not a string.');
+		}
+
+		$numbersDefinition = $this->getNumbersDefinition($numbers);
+		$this->delimiters  = $delimiters;
 
 		if (!empty($limit))
 		{
@@ -56,8 +63,6 @@ class Numbers
 			$this->validate($numbersDefinition);
 			$this->numbers = $this->parse($numbersDefinition);
 		}
-
-		$this->escape();
 
 		$this->validateNumbers();
 		$this->checkNegativeNumbers();
@@ -77,13 +82,28 @@ class Numbers
 	}
 
 	/**
-	 * Returns summary.
+	 * Returns numbers definition by numbers.
 	 *
-	 * @return integer|float
+	 * @param string $numbers
+	 *
+	 * @return string
+	 *
+	 * @throws InvalidArgumentException
 	 */
-	public function getSummary()
+	private function getNumbersDefinition($numbers)
 	{
-		return array_sum($this->numbers);
+		$firstNewLineCharPosition = 0;
+
+		if (strpos($numbers, Delimiters::DELIMITER_PREFIX) === 0)
+		{
+			$firstNewLineCharPosition = strpos($numbers, Delimiters::DELIMITER_NEW_LINE);
+			if ($firstNewLineCharPosition === false)
+			{
+				throw new InvalidArgumentException('The new line character is required if delimiter part is set.');
+			}
+		}
+
+		return ($firstNewLineCharPosition > 0 ? substr($numbers, $firstNewLineCharPosition + 1) : $numbers);
 	}
 
 	/**
@@ -149,16 +169,6 @@ class Numbers
 		}
 
 		return $numbers;
-	}
-
-	/**
-	 * Escapes numbers.
-	 *
-	 * @return void
-	 */
-	private function escape()
-	{
-
 	}
 
 	/**

@@ -12,6 +12,34 @@ use Kata\StringCalculator\NegativeNumberException;
 class NumbersTest extends \PHPUnit_Framework_TestCase
 {
 	/**
+	 * Tests invalid numbers part (invalid input type).
+	 *
+	 * @return void
+	 *
+	 * @expectedException \Kata\StringCalculator\InvalidArgumentException
+	 */
+	public function testInvalidInputTypeException()
+	{
+		$delimiters = new Delimiters("1");
+
+		new Numbers(array(1), $delimiters);
+	}
+
+	/**
+	 * Tests invalid numbers part (no new line character in definition).
+	 *
+	 * @return void
+	 *
+	 * @expectedException \Kata\StringCalculator\InvalidArgumentException
+	 */
+	public function testMissingNewLineCharException()
+	{
+		$delimiters = new Delimiters("1");
+
+		new Numbers("//abcde1abcde2", $delimiters);
+	}
+
+	/**
 	 * Tests invalid limit.
 	 *
 	 * @return void
@@ -20,9 +48,9 @@ class NumbersTest extends \PHPUnit_Framework_TestCase
 	 */
 	public function testInvalidLimitException()
 	{
-		$delimiters = new Delimiters();
+		$delimiters = new Delimiters("1");
 
-		new Numbers('1', $delimiters, 'asd');
+		new Numbers("1", $delimiters, "asd");
 	}
 
 	/**
@@ -34,9 +62,9 @@ class NumbersTest extends \PHPUnit_Framework_TestCase
 	 */
 	public function testInvalidDelimiterException()
 	{
-		$delimiters = new Delimiters();
+		$delimiters = new Delimiters("1");
 
-		new Numbers('1;2', $delimiters);
+		new Numbers("1;2", $delimiters);
 	}
 
 	/**
@@ -48,28 +76,28 @@ class NumbersTest extends \PHPUnit_Framework_TestCase
 	 */
 	public function testInvalidNumberException()
 	{
-		$delimiters = new Delimiters();
+		$delimiters = new Delimiters("1");
 
-		new Numbers('1,A', $delimiters);
+		new Numbers("1,A", $delimiters);
 	}
 
 	/**
 	 * Tests negative number exception.
 	 *
 	 * @param string $expectedNegativeNumbers
-	 * @param string $numbersDefinition
+	 * @param string $numbers
 	 *
 	 * @return void
 	 *
 	 * @dataProvider providerNegativeNumbers
 	 */
-	public function testNegativeNumberException($expectedNegativeNumbers, $numbersDefinition)
+	public function testNegativeNumberException($expectedNegativeNumbers, $numbers)
 	{
-		$delimiters = new Delimiters();
+		$delimiters = new Delimiters($numbers);
 
 		try
 		{
-			new Numbers($numbersDefinition, $delimiters);
+			new Numbers($numbers, $delimiters);
 		}
 		catch (NegativeNumberException $e)
 		{
@@ -81,43 +109,29 @@ class NumbersTest extends \PHPUnit_Framework_TestCase
 	/**
 	 * Tests get method.
 	 *
-	 * @param array      $expectedNumbers
-	 * @param string     $numbersDefinition
-	 * @param Delimiters $delimiters
-	 * @param int        $limit
+	 * @param array  $expectedNumbers
+	 * @param string $numbers
+	 * @param int    $limit
 	 *
 	 * @return void
 	 *
 	 * @dataProvider providerNumbers
 	 */
-	public function testGetNumbers(array $expectedNumbers, $numbersDefinition, $delimiters, $limit = null)
+	public function testGetNumbers(array $expectedNumbers, $numbers, $limit = null)
 	{
-		$numbers = new Numbers($numbersDefinition, $delimiters, $limit);
+		$delimiters = new Delimiters($numbers);
+		$numbersObj = new Numbers($numbers, $delimiters, $limit);
 
-		$this->assertEquals(sort($expectedNumbers), sort($numbers->getNumbers()));
-	}
-
-	/**
-	 * Tests summary.
-	 *
-	 * @param int        $expectedSummary
-	 * @param string     $numbersDefinition
-	 * @param Delimiters $delimiters
-	 * @param int        $limit
-	 *
-	 * @return void
-	 *
-	 * @dataProvider providerSummary
-	 */
-	public function testGetSummary($expectedSummary, $numbersDefinition, $delimiters, $limit = null)
-	{
-		$numbers = new Numbers($numbersDefinition, $delimiters, $limit);
-
-		$this->assertEquals($expectedSummary, $numbers->getSummary());
+		$this->assertEquals(sort($expectedNumbers), sort($numbersObj->getNumbers()));
 	}
 
 	/**
 	 * Data provider with negative numbers.
+	 *
+	 * array(
+	 *		Negative numbers in exception message,
+	 *		numbers string
+	 * )
 	 *
 	 * @return array
 	 */
@@ -125,26 +139,32 @@ class NumbersTest extends \PHPUnit_Framework_TestCase
 	{
 		return array(
 			array(
-				'-1',
-				'-1',
+				"-1",
+				"-1",
 			),
 			array(
-				'-1,-3',
-				'-1,2,-3',
+				"-1,-3",
+				"-1,2,-3",
 			),
 			array(
-				'-3',
-				'1,2,-3',
+				"-3",
+				"1,2,-3",
 			),
 			array(
-				'-1,-2,-3',
-				'-1,-2,-3',
+				"-1,-2,-3",
+				"-1,-2,-3",
 			),
 		);
 	}
 
 	/**
 	 * Data provider to getNumbers.
+	 *
+	 * array(
+	 *		expected numbers,
+	 *		numbers string,
+	 *		limit
+	 * )
 	 *
 	 * @return array
 	 */
@@ -153,85 +173,35 @@ class NumbersTest extends \PHPUnit_Framework_TestCase
 		return array(
 			array(
 				array(1),
-				'1',
-				new Delimiters(),
+				"1",
 			),
 			array(
 				array(1, 2),
-				'1,2',
-				new Delimiters(),
+				"1,2",
 			),
 			array(
 				array(1, 2, 3),
-				'1;2;3',
-				new Delimiters('//[;]'),
+				"//[;]\n1;2;3",
 			),
 			array(
 				array(1, 2, 3),
-				'1;2%3',
-				new Delimiters('//[;][%]'),
+				"//[;][%]\n1;2%3",
 			),
 			array(
 				array(1, 2, 3),
-				'1***2***3',
-				new Delimiters('//[***]'),
+				"//[***]\n1***2***3",
 			),
 			array(
 				array(1, 2, 3),
-				'1AsD2***3',
-				new Delimiters('//[AsD][***]'),
+				"//[AsD][***]\n1AsD2***3",
 			),
 			array(
 				array(1, 2, 3),
-				'1,2,1001,3',
-				new Delimiters(),
+				"1,2,1001,3",
 			),
 			array(
 				array(1, 2, 3),
-				'1,501,2,3',
-				new Delimiters(),
-				500,
-			),
-		);
-	}
-
-	/**
-	 * Data provider to getSummary.
-	 *
-	 * @return array
-	 */
-	public function providerSummary()
-	{
-		return array(
-			array(
-				0,
-				'',
-				new Delimiters(),
-			),
-			array(
-				1,
-				'1',
-				new Delimiters(),
-			),
-			array(
-				3,
-				'1,2',
-				new Delimiters(),
-			),
-			array(
-				6,
-				'1;;2;3',
-				new Delimiters('//[;]'),
-			),
-			array(
-				6,
-				'1AsD2***3AsD1001',
-				new Delimiters('//[AsD][***]'),
-			),
-			array(
-				6,
-				'1+2+501+3',
-				new Delimiters('//[%2B]'),
+				"1,501,2,3",
 				500,
 			),
 		);

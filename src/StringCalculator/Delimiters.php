@@ -28,14 +28,20 @@ class Delimiters
 	/**
 	 * Validates, parses and escapes input.
 	 *
-	 * @param string $delimitersDefinition
+	 * @param string $numbers
 	 *
 	 * @return void
 	 *
 	 * @throws InvalidArgumentException
 	 */
-	public function __construct($delimitersDefinition = '')
+	public function __construct($numbers)
 	{
+		if (is_string($numbers) !== true)
+		{
+			throw new InvalidArgumentException('The "numbers" is not a string.');
+		}
+
+		$delimitersDefinition = $this->getDelimitersDefinition($numbers);
 		if (!empty($delimitersDefinition))
 		{
 			$this->validate($delimitersDefinition);
@@ -62,6 +68,31 @@ class Delimiters
 	public function getDelimiters()
 	{
 		return $this->delimiters;
+	}
+
+	/**
+	 * Returns delimiters definitions by numbers.
+	 *
+	 * @param string $numbers
+	 *
+	 * @return string
+	 *
+	 * @throws InvalidArgumentException
+	 */
+	private function getDelimitersDefinition($numbers)
+	{
+		$firstNewLineCharPosition = 0;
+
+		if (strpos($numbers, self::DELIMITER_PREFIX) === 0)
+		{
+			$firstNewLineCharPosition = strpos($numbers, self::DELIMITER_NEW_LINE);
+			if ($firstNewLineCharPosition === false)
+			{
+				throw new InvalidArgumentException('The new line character is required if delimiter part is set.');
+			}
+		}
+
+		return ($firstNewLineCharPosition > 0 ? substr($numbers, strlen(self::DELIMITER_PREFIX), $firstNewLineCharPosition) : '');
 	}
 
 	/**

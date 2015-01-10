@@ -3,6 +3,8 @@
 namespace Kata\Test\StringCalculator;
 
 use Kata\StringCalculator\StringCalculator;
+use Kata\StringCalculator\Delimiters;
+use Kata\StringCalculator\Numbers;
 
 /**
  * Tests for StringCalculator class.
@@ -19,25 +21,15 @@ class StringCalculatorTest extends \PHPUnit_Framework_TestCase
 	 *
 	 * @dataProvider providerNumbers
 	 */
-	public function testAdd($expectedSummary, $numbers)
+	public function testAdd($expectedSummary, $numbers, $limit = null)
 	{
-		$stringCalculator = new StringCalculator();
-		$summary          = $stringCalculator->add($numbers);
+		$delimiters = new Delimiters($numbers);
+		$numbersObj = new Numbers($numbers, $delimiters, $limit);
 
-		$this->assertEquals($expectedSummary, $summary, 'Difference between summaries');
-	}
-
-	/**
-	 * Tests invalid input.
-	 *
-	 * @return void
-	 *
-	 * @expectedException \Kata\StringCalculator\InvalidArgumentException
-	 */
-	public function testInvalidArgumentException()
-	{
 		$stringCalculator = new StringCalculator();
-		$stringCalculator->add(array(1, 2));
+		$summary          = $stringCalculator->add($numbersObj);
+
+		$this->assertEquals($expectedSummary, $summary);
 	}
 
 	/**

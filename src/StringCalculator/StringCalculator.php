@@ -7,27 +7,80 @@ namespace Kata\StringCalculator;
  */
 class StringCalculator
 {
+	/** Parts of delimiter */
 	const DEFAULT_DELIMITER = ',';
 	const DELIMITER_PREFIX  = '//';
 
+	/** Upper limit to ignore numbers */
+	const IGNORE_UPPER_LIMIT = 1000;
+
 	/**
-	 * Formatted and checked numbers.
+	 * Part of numbers.
+	 *
+	 * @var string
+	 */
+	private $numbersString = '';
+
+	/**
+	 * Formatted, checked and escaped numbers.
 	 *
 	 * @var array
 	 */
-	private $integers = array();
+	private $numbers = array();
 
 	/**
-	 * Constructor.
+	 * Part of delimiters.
+	 *
+	 * @var string
+	 */
+	private $delimitersString = '';
+
+	/**
+	 * Formatted, checked and escaped delimiters.
+	 *
+	 * @var array
+	 */
+	private $delimiters = array();
+
+	/**
+	 * Adds the numbers from string.
+	 *
+	 * @param string $numbers
+	 *
+	 * @return int
+	 *
+	 * @throws InvalidArgumentException|InvalidIntegerException|NegativeNumberException
+	 */
+	public function add($numbers)
+	{
+		$this->validateInput($numbers);
+
+		$this->init($numbers);
+
+		return array_sum($this->numbers);
+	}
+
+	/**
+	 * Checks that the input is string.
 	 *
 	 * @param string $numbers
 	 *
 	 * @return void
+	 *
+	 * @throws InvalidArgumentException
 	 */
-	public function __construct($numbers)
+	private function validateInput($numbers)
 	{
-		$this->init($numbers);
-
+		if (is_string($numbers) !== true)
+		{
+			throw new InvalidArgumentException('The "numbers" is not a string.');
+		}
+		if (
+			strpos($numbers, self::DELIMITER_PREFIX) === 0
+			&& strpos($numbers, "\n") === false
+		) {
+			throw new InvalidArgumentException('The "numbers" does not contain new line character.');
+		}
 		return;
 	}
 
@@ -42,40 +95,108 @@ class StringCalculator
 	 */
 	private function init($numbers)
 	{
-		$delimiter      = $this->getDelimiter($numbers);
-		$cleanedNumbers = $this->getCleanedNumbers($numbers);
+		list($this->delimitersString, $this->numbersString) = $this->splitNumbers($numbers);
 
-		$integers = preg_split('/[\n'. preg_quote($delimiter) . ']/', $cleanedNumbers);
+		$this->setDelimiters();
+		$this->setNumbers();
 
+		$this->validateNumbers();
+		$this->checkNegativeNumbers();
+
+		$this->ignoreBigNumbers();
+
+		return;
+	}
+
+	/**
+	 * Splits numbers string.
+	 *
+	 * @param string $numbers
+	 *
+	 * @return array	Delimiters definition and numbers in string.
+	 */
+	private function splitNumbers($numbers)
+	{
+		$firstNewLineCharPosition = 0;
+
+		if (strpos($numbers, self::DELIMITER_PREFIX) === 0)
+		{
+			$firstNewLineCharPosition = strpos($numbers, "\n");
+		}
+
+		return array(
+			($firstNewLineCharPosition > 0 ? substr($numbers, strlen(self::DELIMITER_PREFIX), $firstNewLineCharPosition) : ''),
+			($firstNewLineCharPosition > 0 ? substr($numbers, $firstNewLineCharPosition + 1) : $numbers),
+		);
+	}
+
+	/**
+	 * Validates numbers.
+	 *
+	 * @return void
+	 *
+	 * @throws InvalidNumberException
+	 */
+	private function validateNumbers()
+	{
+		foreach ($this->numbers as $number)
+		{
+			if (empty($number))
+			{
+				continue;
+			}
+
+			if (is_numeric($number) === false)
+			{
+				throw new InvalidNumberException('The part of the given numbers is not numeric [' . $number . ']');
+			}
+		}
+
+		return;
+	}
+
+	/**
+	 * Checks negative numbers.
+	 *
+	 * @return void
+	 *
+	 * @throws NegativeNumberException
+	 */
+	private function checkNegativeNumbers()
+	{
 		$negativeNumbers = array();
 
-		foreach ($integers as $integer)
+		foreach ($this->numbers as $number)
 		{
-			if (empty($integer))
+			if ((int)$number < 0)
 			{
-				$integer = 0;
+				$negativeNumbers[] = $number;
 			}
-
-			$trimmedInteger = trim($integer);
-			if (!is_numeric($trimmedInteger))
-			{
-				throw new InvalidNumberException('The given number is not integer [' . $trimmedInteger . ']');
-			}
-			if ($trimmedInteger < 0)
-			{
-				$negativeNumbers[] = $trimmedInteger;
-			}
-			if ($trimmedInteger > 1000)
-			{
-				$trimmedInteger = 0;
-			}
-
-			$this->integers[] = $trimmedInteger;
 		}
 
 		if (count($negativeNumbers))
 		{
-			throw new NegativeNumberException('The numbers contains negative numbers [' . implode(', ', $negativeNumbers) . ']');
+			throw new NegativeNumberException('The "numbers" contains negative numbers [' . implode(', ', $negativeNumbers) . ']');
+		}
+
+		return;
+	}
+
+	/**
+	 * Ignores numbers greater than limit.
+	 *
+	 * @param int $limit
+	 *
+	 * @return void
+	 */
+	private function ignoreBigNumbers($limit = self::IGNORE_UPPER_LIMIT)
+	{
+		foreach ($this->numbers as $i => $number)
+		{
+			if ((int)$number > $limit)
+			{
+				unset($this->numbers[$i]);
+			}
 		}
 
 		return;
@@ -84,56 +205,83 @@ class StringCalculator
 	/**
 	 * Returns delimtier.
 	 *
-	 * @param string $numbers
+	 * @return void
 	 *
-	 * @return string
+	 * @throws InvalidArgumentException
 	 */
-	private function getDelimiter($numbers)
+	private function setDelimiters()
 	{
-		$delimiter = self::DEFAULT_DELIMITER;
-
-		if (substr($numbers, 0, 2) === self::DELIMITER_PREFIX)
+		if (!empty($this->delimitersString))
 		{
-			// TODO: syntax check //[delimiter]\n*
-			$numbersWithoutDelimiterPrefix    = substr($numbers, 3);
-			list($delimiterWithCloseBracket,) = explode("\n", $numbersWithoutDelimiterPrefix, 2);
-			$delimiter                        = trim($delimiterWithCloseBracket, "]");
+			$delimiters = $this->parseSpecialDelimiterString();
+		}
+		else
+		{
+			$delimiters = array(self::DEFAULT_DELIMITER);
 		}
 
-		return urldecode($delimiter);
+		// Adds the new line character to delimiters because of the compatibility.
+		$delimiters[] = "\n";
+
+		$this->delimiters = $delimiters;
+
+		$this->escapeDelimiters();
+
+		return;
+	}
+
+	/**
+	 * Parses special delimiter part of numbers string.
+	 *
+	 * @return array
+	 *
+	 * @throws InvalidArgumentException
+	 */
+	private function parseSpecialDelimiterString()
+	{
+		$matches = array();
+		if (!preg_match_all('/\[(?P<delimiter>[^\]]+)\]/', $this->delimitersString, $matches))
+		{
+			throw new InvalidArgumentException('The delimiter definition has syntax error.');
+		}
+
+		return $matches['delimiter'];
+	}
+
+	/**
+	 * Escapes (urldecode, preg_quote) delimiters.
+	 *
+	 * @return void
+	 */
+	private function escapeDelimiters()
+	{
+		foreach ($this->delimiters as $i => $delimiter)
+		{
+			$urlDecodedDelimiter  = urldecode($delimiter);
+			$this->delimiters[$i] = preg_quote($urlDecodedDelimiter, '/');
+		}
+
+		return;
 	}
 
 	/**
 	 * Returns cleaned numbers.
 	 *
-	 * @param string $numbers
-	 *
-	 * @return string
+	 * @return void
 	 */
-	private function getCleanedNumbers($numbers)
+	private function setNumbers()
 	{
-		$cleanedNumbers = $numbers;
-
-		if (substr($numbers, 0, 2) === self::DELIMITER_PREFIX)
+		$splitRegex = '/(' . implode('|', $this->delimiters) . ')/';
+		if (preg_match($splitRegex, $this->numbersString))
 		{
-			// TODO: false-ra Exception!
-			$firstNewLinePosition = strpos($numbers, "\n");
-			$cleanedNumbers       = substr($numbers, $firstNewLinePosition);
+			$this->numbers = preg_split($splitRegex, $this->numbersString, -1, PREG_SPLIT_NO_EMPTY);
+		}
+		elseif (!empty($this->numbersString))
+		{
+			$this->numbers = array($this->numbersString);
 		}
 
-		return $cleanedNumbers;
-	}
-
-	/**
-	 * Adds the numbers in string.
-	 *
-	 * @param string $numbers
-	 *
-	 * @return int
-	 */
-	public function add()
-	{
-		return array_sum($this->integers);
+		return;
 	}
 
 }

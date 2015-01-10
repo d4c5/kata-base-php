@@ -21,10 +21,49 @@ class StringCalculatorTest extends \PHPUnit_Framework_TestCase
 	 */
 	public function testAdd($expectedSummary, $numbers)
 	{
-		$stringCalculator = new StringCalculator($numbers);
-		$summary          = $stringCalculator->add();
+		$stringCalculator = new StringCalculator();
+		$summary          = $stringCalculator->add($numbers);
 
 		$this->assertEquals($expectedSummary, $summary, 'Difference between summaries');
+	}
+
+	/**
+	 * Tests invalid input.
+	 *
+	 * @return void
+	 *
+	 * @expectedException \Kata\StringCalculator\InvalidArgumentException
+	 */
+	public function testInvalidArgumentException()
+	{
+		$stringCalculator = new StringCalculator();
+		$stringCalculator->add(array(1, 2));
+	}
+
+	/**
+	 * Tests invalid delimiter part (no new line character in definition).
+	 *
+	 * @return void
+	 *
+	 * @expectedException \Kata\StringCalculator\InvalidArgumentException
+	 */
+	public function testNoNewLineInDelimiterException()
+	{
+		$stringCalculator = new StringCalculator();
+		$stringCalculator->add("//abcde1abcde2");
+	}
+
+	/**
+	 * Tests invalid delimiter part (syntax error in definition).
+	 *
+	 * @return void
+	 *
+	 * @expectedException \Kata\StringCalculator\InvalidArgumentException
+	 */
+	public function testSyntaxErrorInDelimiterException()
+	{
+		$stringCalculator = new StringCalculator();
+		$stringCalculator->add("//[\n1,2,3");
 	}
 
 	/**
@@ -36,8 +75,8 @@ class StringCalculatorTest extends \PHPUnit_Framework_TestCase
 	 */
 	public function testInvalidNumberException()
 	{
-		$stringCalculator = new StringCalculator("A,B");
-		$stringCalculator->add();
+		$stringCalculator = new StringCalculator();
+		$stringCalculator->add("A,B");
 	}
 
 	/**
@@ -46,12 +85,12 @@ class StringCalculatorTest extends \PHPUnit_Framework_TestCase
 	 * @return void
 	 *
 	 * @expectedException \Kata\StringCalculator\NegativeNumberException
-	 * @expectedExceptionMessage The numbers contains negative numbers [-2, -3]
+	 * @expectedExceptionMessage The "numbers" contains negative numbers [-2, -3]
 	 */
 	public function testNegativeNumberException()
 	{
-		$stringCalculator = new StringCalculator("-2,-3");
-		$stringCalculator->add();
+		$stringCalculator = new StringCalculator();
+		$stringCalculator->add("-2,-3");
 	}
 
 	/**
@@ -75,6 +114,10 @@ class StringCalculatorTest extends \PHPUnit_Framework_TestCase
 			array(2, "2,1001"),
 			array(1001, "1,1000"),
 			array(6, "//[***]\n1***2***3"),
+			array(7, "//[AsD]\n2AsD2AsD3"),
+			array(7, "//[;][:]\n1;3:3"),
+			array(4, "//[*][%]\n1*2%1"),
+			array(4, "//[AsD][***]\n1AsD2***1"),
 		);
 	}
 

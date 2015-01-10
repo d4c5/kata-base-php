@@ -14,14 +14,41 @@ class StringCalculatorTest extends \PHPUnit_Framework_TestCase
 	/**
 	 * Tests add method.
 	 *
+	 * @param int   $expectedSummary
+	 * @param array $numbers
+	 *
+	 * @return void
+	 *
+	 * @dataProvider providerNumbersToMock
+	 */
+	public function testAdd($expectedSummary, array $numbers)
+	{
+		$numbersObj = $this->getMockBuilder('\Kata\StringCalculator\Numbers')
+							->disableOriginalConstructor()
+							->setMethods(array('getNumbers'))
+							->getMock();
+		$numbersObj->expects($this->once())
+					->method('getNumbers')
+					->willReturn($numbers);
+
+		$stringCalculator = new StringCalculator();
+		$summary          = $stringCalculator->add($numbersObj);
+
+		$this->assertEquals($expectedSummary, $summary);
+	}
+
+	/**
+	 * Tests add method (integration).
+	 *
 	 * @param int    $expectedSummary
 	 * @param string $numbers
+	 * @param int    $limit
 	 *
 	 * @return void
 	 *
 	 * @dataProvider providerNumbers
 	 */
-	public function testAdd($expectedSummary, $numbers, $limit = null)
+	public function testIntegrationAdd($expectedSummary, $numbers, $limit = null)
 	{
 		$delimiters = new Delimiters($numbers);
 		$numbersObj = new Numbers($numbers, $delimiters, $limit);
@@ -34,6 +61,32 @@ class StringCalculatorTest extends \PHPUnit_Framework_TestCase
 
 	/**
 	 * Data provider to add.
+	 *
+	 * array(
+	 *		summary,
+	 *		expected getNumbers
+	 * )
+	 *
+	 * @return array
+	 */
+	public function providerNumbersToMock()
+	{
+		return array(
+			array(0, array()),				// ""
+			array(1, array(1)),				// "1"
+			array(3, array(1, 2)),			// "1,2"
+			array(6, array(1, 2, 3)),		// "1,2,3"
+			array(1001, array(1, 1000)),	// "1,1000"
+		);
+	}
+
+	/**
+	 * Data provider to add.
+	 *
+	 * array(
+	 *		summary,
+	 *		numbers string
+	 * )
 	 *
 	 * @return array
 	 */

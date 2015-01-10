@@ -20,7 +20,9 @@ class NumbersTest extends \PHPUnit_Framework_TestCase
 	 */
 	public function testInvalidInputTypeException()
 	{
-		$delimiters = new Delimiters("1");
+		$delimiters = $this->getMockBuilder('\Kata\StringCalculator\Delimiters')
+						->disableOriginalConstructor()
+						->getMock();
 
 		new Numbers(array(1), $delimiters);
 	}
@@ -34,7 +36,9 @@ class NumbersTest extends \PHPUnit_Framework_TestCase
 	 */
 	public function testMissingNewLineCharException()
 	{
-		$delimiters = new Delimiters("1");
+		$delimiters = $this->getMockBuilder('\Kata\StringCalculator\Delimiters')
+						->disableOriginalConstructor()
+						->getMock();
 
 		new Numbers("//abcde1abcde2", $delimiters);
 	}
@@ -48,7 +52,9 @@ class NumbersTest extends \PHPUnit_Framework_TestCase
 	 */
 	public function testInvalidLimitException()
 	{
-		$delimiters = new Delimiters("1");
+		$delimiters = $this->getMockBuilder('\Kata\StringCalculator\Delimiters')
+						->disableOriginalConstructor()
+						->getMock();
 
 		new Numbers("1", $delimiters, "asd");
 	}
@@ -62,7 +68,13 @@ class NumbersTest extends \PHPUnit_Framework_TestCase
 	 */
 	public function testInvalidDelimiterException()
 	{
-		$delimiters = new Delimiters("1");
+		$delimiters = $this->getMockBuilder('\Kata\StringCalculator\Delimiters')
+						->disableOriginalConstructor()
+						->setMethods(array('getDelimiters'))
+						->getMock();
+		$delimiters->expects($this->once())
+					->method('getDelimiters')
+					->willReturn(array(','));
 
 		new Numbers("1;2", $delimiters);
 	}
@@ -76,7 +88,13 @@ class NumbersTest extends \PHPUnit_Framework_TestCase
 	 */
 	public function testInvalidNumberException()
 	{
-		$delimiters = new Delimiters("1");
+		$delimiters = $this->getMockBuilder('\Kata\StringCalculator\Delimiters')
+						->disableOriginalConstructor()
+						->setMethods(array('getDelimiters'))
+						->getMock();
+		$delimiters->expects($this->exactly(2))
+					->method('getDelimiters')
+					->willReturn(array(','));
 
 		new Numbers("1,A", $delimiters);
 	}
@@ -93,7 +111,18 @@ class NumbersTest extends \PHPUnit_Framework_TestCase
 	 */
 	public function testNegativeNumberException($expectedNegativeNumbers, $numbers)
 	{
-		$delimiters = new Delimiters($numbers);
+		$defaultDelimiters = array(
+			Delimiters::DELIMITER_COMMA,
+			Delimiters::DELIMITER_NEW_LINE,
+		);
+
+		$delimiters = $this->getMockBuilder('\Kata\StringCalculator\Delimiters')
+						->disableOriginalConstructor()
+						->setMethods(array('getDelimiters'))
+						->getMock();
+		$delimiters->expects($this->exactly(2))
+					->method('getDelimiters')
+					->willReturn($defaultDelimiters);
 
 		try
 		{
@@ -109,6 +138,7 @@ class NumbersTest extends \PHPUnit_Framework_TestCase
 	/**
 	 * Tests get method.
 	 *
+	 * @param array  $delimiters
 	 * @param array  $expectedNumbers
 	 * @param string $numbers
 	 * @param int    $limit
@@ -117,10 +147,17 @@ class NumbersTest extends \PHPUnit_Framework_TestCase
 	 *
 	 * @dataProvider providerNumbers
 	 */
-	public function testGetNumbers(array $expectedNumbers, $numbers, $limit = null)
+	public function testGetNumbers(array $delimiters, array $expectedNumbers, $numbers, $limit = null)
 	{
-		$delimiters = new Delimiters($numbers);
-		$numbersObj = new Numbers($numbers, $delimiters, $limit);
+		$delimitersObj = $this->getMockBuilder('\Kata\StringCalculator\Delimiters')
+							->disableOriginalConstructor()
+							->setMethods(array('getDelimiters'))
+							->getMock();
+		$delimitersObj->expects($this->exactly(2))
+						->method('getDelimiters')
+						->willReturn($delimiters);
+
+		$numbersObj = new Numbers($numbers, $delimitersObj, $limit);
 
 		$this->assertEquals(sort($expectedNumbers), sort($numbersObj->getNumbers()));
 	}
@@ -138,10 +175,6 @@ class NumbersTest extends \PHPUnit_Framework_TestCase
 	public function providerNegativeNumbers()
 	{
 		return array(
-			array(
-				"-1",
-				"-1",
-			),
 			array(
 				"-1,-3",
 				"-1,2,-3",
@@ -172,34 +205,37 @@ class NumbersTest extends \PHPUnit_Framework_TestCase
 	{
 		return array(
 			array(
-				array(1),
-				"1",
-			),
-			array(
+				array(","),
 				array(1, 2),
 				"1,2",
 			),
 			array(
+				array(";"),
 				array(1, 2, 3),
 				"//[;]\n1;2;3",
 			),
 			array(
+				array(";", "%"),
 				array(1, 2, 3),
 				"//[;][%]\n1;2%3",
 			),
 			array(
+				array("\*\*\*"),
 				array(1, 2, 3),
 				"//[***]\n1***2***3",
 			),
 			array(
+				array("AsD", "\*\*\*"),
 				array(1, 2, 3),
 				"//[AsD][***]\n1AsD2***3",
 			),
 			array(
+				array(","),
 				array(1, 2, 3),
 				"1,2,1001,3",
 			),
 			array(
+				array(","),
 				array(1, 2, 3),
 				"1,501,2,3",
 				500,

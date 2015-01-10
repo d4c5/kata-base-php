@@ -41,59 +41,6 @@ class StringCalculatorTest extends \PHPUnit_Framework_TestCase
 	}
 
 	/**
-	 * Tests invalid delimiter part (no new line character in definition).
-	 *
-	 * @return void
-	 *
-	 * @expectedException \Kata\StringCalculator\InvalidArgumentException
-	 */
-	public function testNoNewLineInDelimiterException()
-	{
-		$stringCalculator = new StringCalculator();
-		$stringCalculator->add("//abcde1abcde2");
-	}
-
-	/**
-	 * Tests invalid delimiter part (syntax error in definition).
-	 *
-	 * @return void
-	 *
-	 * @expectedException \Kata\StringCalculator\InvalidArgumentException
-	 */
-	public function testSyntaxErrorInDelimiterException()
-	{
-		$stringCalculator = new StringCalculator();
-		$stringCalculator->add("//[\n1,2,3");
-	}
-
-	/**
-	 * Tests invalid number exception.
-	 *
-	 * @return void
-	 *
-	 * @expectedException \Kata\StringCalculator\InvalidNumberException
-	 */
-	public function testInvalidNumberException()
-	{
-		$stringCalculator = new StringCalculator();
-		$stringCalculator->add("A,B");
-	}
-
-	/**
-	 * Tests negative number exception.
-	 *
-	 * @return void
-	 *
-	 * @expectedException \Kata\StringCalculator\NegativeNumberException
-	 * @expectedExceptionMessage The "numbers" contains negative numbers [-2, -3]
-	 */
-	public function testNegativeNumberException()
-	{
-		$stringCalculator = new StringCalculator();
-		$stringCalculator->add("-2,-3");
-	}
-
-	/**
 	 * Data provider to add.
 	 *
 	 * @return array

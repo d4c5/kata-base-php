@@ -4,6 +4,7 @@ namespace Kata\Test\StringCalculator;
 
 use Kata\StringCalculator\Numbers;
 use Kata\StringCalculator\Delimiters;
+use Kata\StringCalculator\NegativeNumberException;
 
 /**
  * Tests for StringCalculator class.
@@ -55,16 +56,26 @@ class NumbersTest extends \PHPUnit_Framework_TestCase
 	/**
 	 * Tests negative number exception.
 	 *
+	 * @param string $expectedNegativeNumbers
+	 * @param string $numbersDefinition
+	 *
 	 * @return void
 	 *
-	 * @expectedException \Kata\StringCalculator\NegativeNumberException
-	 * @expectedExceptionMessage The "numbers" contains negative numbers [-2, -3]
+	 * @dataProvider providerNegativeNumbers
 	 */
-	public function testNegativeNumberException()
+	public function testNegativeNumberException($expectedNegativeNumbers, $numbersDefinition)
 	{
 		$delimiters = new Delimiters();
 
-		new Numbers('-2,-3', $delimiters);
+		try
+		{
+			new Numbers($numbersDefinition, $delimiters);
+		}
+		catch (NegativeNumberException $e)
+		{
+			$expectedExceptionMessage = 'The "numbers" contains negative numbers [' . $expectedNegativeNumbers . ']';
+			$this->assertEquals($expectedExceptionMessage, $e->getMessage());
+		}
 	}
 
 	/**
@@ -84,6 +95,52 @@ class NumbersTest extends \PHPUnit_Framework_TestCase
 		$numbers = new Numbers($numbersDefinition, $delimiters, $limit);
 
 		$this->assertEquals(sort($expectedNumbers), sort($numbers->getNumbers()));
+	}
+
+	/**
+	 * Tests summary.
+	 *
+	 * @param int        $expectedSummary
+	 * @param string     $numbersDefinition
+	 * @param Delimiters $delimiters
+	 * @param int        $limit
+	 *
+	 * @return void
+	 *
+	 * @dataProvider providerSummary
+	 */
+	public function testGetSummary($expectedSummary, $numbersDefinition, $delimiters, $limit = null)
+	{
+		$numbers = new Numbers($numbersDefinition, $delimiters, $limit);
+
+		$this->assertEquals($expectedSummary, $numbers->getSummary());
+	}
+
+	/**
+	 * Data provider with negative numbers.
+	 *
+	 * @return array
+	 */
+	public function providerNegativeNumbers()
+	{
+		return array(
+			array(
+				'-1',
+				'-1',
+			),
+			array(
+				'-1,-3',
+				'-1,2,-3',
+			),
+			array(
+				'-3',
+				'1,2,-3',
+			),
+			array(
+				'-1,-2,-3',
+				'-1,-2,-3',
+			),
+		);
 	}
 
 	/**
@@ -137,4 +194,47 @@ class NumbersTest extends \PHPUnit_Framework_TestCase
 			),
 		);
 	}
+
+	/**
+	 * Data provider to getSummary.
+	 *
+	 * @return array
+	 */
+	public function providerSummary()
+	{
+		return array(
+			array(
+				0,
+				'',
+				new Delimiters(),
+			),
+			array(
+				1,
+				'1',
+				new Delimiters(),
+			),
+			array(
+				3,
+				'1,2',
+				new Delimiters(),
+			),
+			array(
+				6,
+				'1;;2;3',
+				new Delimiters('//[;]'),
+			),
+			array(
+				6,
+				'1AsD2***3AsD1001',
+				new Delimiters('//[AsD][***]'),
+			),
+			array(
+				6,
+				'1+2+501+3',
+				new Delimiters('//[%2B]'),
+				500,
+			),
+		);
+	}
+
 }

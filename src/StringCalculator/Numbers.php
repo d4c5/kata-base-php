@@ -202,7 +202,7 @@ class Numbers
 
 		if (count($negativeNumbers))
 		{
-			throw new NegativeNumberException('The "numbers" contains negative numbers [' . implode(', ', $negativeNumbers) . ']');
+			throw new NegativeNumberException('The "numbers" contains negative numbers [' . implode(',', $negativeNumbers) . ']');
 		}
 
 		return;

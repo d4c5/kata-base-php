@@ -35,9 +35,9 @@ class StringToArrayTest extends \PHPUnit_Framework_TestCase
 	public function testGetArrayByString($string, array $expectedArray)
 	{
 		$stringToArray = new StringToArray();
-		$array         = $stringToArray->getArrayByString($string);
+		$result        = $stringToArray->getArrayByString($string);
 
-		$this->assertEquals($expectedArray, $array);
+		$this->assertEquals($expectedArray, $result->toArray());
 	}
 
 	/**
@@ -119,6 +119,31 @@ class StringToArrayTest extends \PHPUnit_Framework_TestCase
 						'gyors',
 						'fo utca',
 						'9',
+					),
+				),
+			),
+			array(
+				"#useFirstLineAsLabels\n"
+				. "Name,Email,Phone\n"
+				. "Mark,marc@be.com,998\n"
+				. "Noemi,noemi@ac.co.uk,888",
+				array(
+					'labels' => array(
+						'Name',
+						'Email',
+						'Phone',
+					),
+					'data' => array(
+						0 => array(
+							'Mark',
+							'marc@be.com',
+							'998',
+						),
+						1 => array(
+							'Noemi',
+							'noemi@ac.co.uk',
+							'888',
+						),
 					),
 				),
 			),

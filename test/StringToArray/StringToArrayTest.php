@@ -147,6 +147,50 @@ class StringToArrayTest extends \PHPUnit_Framework_TestCase
 					),
 				),
 			),
+			array(
+				"#useFirstLineAsLabels=1&columnDelimiter=,&lineDelimiter=%0A\n"
+				. "Name,Email,Phone\n"
+				. "Mark,marc@be.com,998\n"
+				. "Noemi,noemi@ac.co.uk,888",
+				array(
+					'labels' => array(
+						'Name',
+						'Email',
+						'Phone',
+					),
+					'data' => array(
+						0 => array(
+							'Mark',
+							'marc@be.com',
+							'998',
+						),
+						1 => array(
+							'Noemi',
+							'noemi@ac.co.uk',
+							'888',
+						),
+					),
+				),
+			),
+			array(
+				"#useFirstLineAsLabels=0&columnDelimiter=;&lineDelimiter=|\n"
+				. "Mark;marc@be.com;998|"
+				. "Noemi;noemi@ac.co.uk;888",
+				array(
+					'data' => array(
+						0 => array(
+							'Mark',
+							'marc@be.com',
+							'998',
+						),
+						1 => array(
+							'Noemi',
+							'noemi@ac.co.uk',
+							'888',
+						),
+					),
+				),
+			),
 		);
 	}
 

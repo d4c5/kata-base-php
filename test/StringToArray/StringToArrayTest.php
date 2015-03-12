@@ -72,11 +72,11 @@ class StringToArrayTest extends \PHPUnit_Framework_TestCase
 			array(
 				'100,982,444,990,1',
 				array(
-					100,
-					982,
-					444,
-					990,
-					1,
+					'100',
+					'982',
+					'444',
+					'990',
+					'1',
 				),
 			),
 			array(
@@ -85,6 +85,41 @@ class StringToArrayTest extends \PHPUnit_Framework_TestCase
 					'Mark',
 					'Anthony',
 					'marka@lib.de',
+				),
+			),
+			array(
+				"211,22,35\n10,20,33",
+				array(
+					0 => array(
+						'211',
+						'22',
+						'35',
+					),
+					1 => array(
+						'10',
+						'20',
+						'33',
+					),
+				),
+			),
+			array(
+				"luxembourg,kennedy,44\nbudapest,expo ter,5-7\ngyors,fo utca,9",
+				array(
+					0 => array(
+						'luxembourg',
+						'kennedy',
+						'44',
+					),
+					1 => array(
+						'budapest',
+						'expo ter',
+						'5-7',
+					),
+					2 => array(
+						'gyors',
+						'fo utca',
+						'9',
+					),
 				),
 			),
 		);

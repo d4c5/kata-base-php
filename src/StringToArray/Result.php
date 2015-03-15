@@ -30,7 +30,7 @@ class Result
 
 	/**
 	 * Sets data and labels.
-	 *
+	 * 
 	 * @param array $data
 	 * @param array $labels
 	 *
@@ -43,27 +43,47 @@ class Result
 	}
 
 	/**
-	 * Returns the result in an array.
+	 * Sets data.
+	 *
+	 * @param array $data
+	 *
+	 * @return void
+	 */
+	public function setData(array $data)
+	{
+		$this->data = $data;
+	}
+
+	/**
+	 * Returns data.
 	 *
 	 * @return array
 	 */
-	public function toArray()
+	public function getData()
 	{
-		$array = array();
+		return $this->data;
+	}
 
-		if (!empty($this->labels))
-		{
-			$array = array(
-				'labels' => $this->labels,
-				'data'   => $this->data,
-			);
-		}
-		else
-		{
-			$array = $this->data;
-		}
+	/**
+	 * Sets labels.
+	 *
+	 * @param array $labels
+	 *
+	 * @return void
+	 */
+	public function setLabels(array $labels)
+	{
+		$this->labels = $labels;
+	}
 
-		return $array;
+	/**
+	 * Returns labels.
+	 *
+	 * @return array
+	 */
+	public function getLabels()
+	{
+		return $this->labels;
 	}
 
 }
